@@ -59,6 +59,12 @@ export function setupInputForm() {
         </div>
       </div>
 
+      <div id="options-container">
+        <h2>Options:</h2>
+        <label><input type="checkbox" id="valhalla-only"> Allow Valhalla items only in Evergarden</label>
+        <button type="button" id="reset-values">Reset All Values</button>
+      </div>
+
       <button type="submit">Optimize</button>
     </form>
     <div id="results"></div>
@@ -87,6 +93,20 @@ export function setupInputForm() {
   });
 
   const form = document.querySelector<HTMLFormElement>("#decoration-form")!;
+  const valhallaOnlyCheckbox =
+    document.querySelector<HTMLInputElement>("#valhalla-only")!;
+  const resetValuesButton =
+    document.querySelector<HTMLButtonElement>("#reset-values")!;
+
+  resetValuesButton.addEventListener("click", () => {
+    const decorationInputs = document.querySelectorAll<HTMLInputElement>(
+      ".decoration-input-group input"
+    );
+    decorationInputs.forEach((input) => {
+      input.value = "0";
+    });
+  });
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
@@ -105,7 +125,11 @@ export function setupInputForm() {
 
     saveUserData(towns, decorationQuantities);
 
-    const results = optimizeDecorations(towns, decorationQuantities);
+    const results = optimizeDecorations(
+      towns,
+      decorationQuantities,
+      valhallaOnlyCheckbox.checked
+    );
 
     const resultsDiv = document.querySelector<HTMLDivElement>("#results")!;
     resultsDiv.innerHTML = "";
