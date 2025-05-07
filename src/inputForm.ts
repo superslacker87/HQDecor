@@ -188,8 +188,13 @@ export function setupInputForm() {
           return inputOrder.indexOf(nameA) - inputOrder.indexOf(nameB);
         })
         .forEach(([name, total]) => {
+          const decoration = decorations.find((d) => d.name === name);
+          const greenTotal = (decoration?.green || 0) * total;
+          const blueTotal = (decoration?.blue || 0) * total;
+          const redTotal = (decoration?.red || 0) * total;
+
           const listItem = document.createElement("li");
-          listItem.textContent = `${total}x ${name}`;
+          listItem.innerHTML = `${total}x ${name} (<span style='color: green;'>&#x1F49A;</span> ${greenTotal}, <span style='color: blue;'>&#x1F499;</span> ${blueTotal}, <span style='color: red;'>&#x1F497;</span> ${redTotal})`;
           decorationList.appendChild(listItem);
         });
 
