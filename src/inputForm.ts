@@ -46,10 +46,11 @@ export function setupInputForm() {
           <label><input type="checkbox" class="town-checkbox" value="town2"> Town 2</label>
           <label><input type="checkbox" class="town-checkbox" value="town3"> Town 3</label>
           <label><input type="checkbox" class="town-checkbox" value="town4"> Town 4</label>
+             <label><input type="checkbox" class="town-checkbox" value="evergarden"> Evergarden</label>
           <label><input type="checkbox" class="town-checkbox" value="northern1"> Northern Town 1</label>
           <label><input type="checkbox" class="town-checkbox" value="northern2"> Northern Town 2</label>
           <label><input type="checkbox" class="town-checkbox" value="northern3"> Northern Town 3</label>
-          <label><input type="checkbox" class="town-checkbox" value="evergarden"> Evergarden</label>
+       
         </div>
       </div>
 
