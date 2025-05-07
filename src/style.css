@@ -23,11 +23,12 @@ a:hover {
 }
 
 body {
-  margin: 0;
   display: flex;
-  place-items: center;
-  min-width: 320px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 100vh;
+  margin: 0;
 }
 
 h1 {
@@ -36,10 +37,30 @@ h1 {
 }
 
 #app {
-  max-width: 1280px;
+  flex: 1;
+  max-width: 800px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
+  box-sizing: border-box;
   text-align: center;
+}
+
+ul {
+  list-style-type: none; /* Hide bullet points */
+  padding: 0;
+}
+
+.decoration-quantities,
+.results {
+  text-align: left; /* Align content to the left */
+  width: 100%;
+}
+
+footer {
+  text-align: center;
+  margin-top: auto; /* Push footer to the bottom */
+  padding: 1rem;
 }
 
 .logo {
@@ -80,6 +101,28 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Center align the decoration-input-group elements while keeping text left-aligned */
+.decoration-input-group {
+  text-align: left;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.decoration-input-group label {
+  margin-right: 0; /* Remove margin */
+  width: 25%;
+}
+
+.decoration-input-group label::after {
+  content: "\00A0"; /* Add a non-breaking space */
+}
+
+.decoration-input-group input {
+  max-width: 50px;
+  box-sizing: border-box;
 }
 
 @media (prefers-color-scheme: light) {

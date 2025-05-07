@@ -28,7 +28,10 @@ export function setupInputForm() {
   const app = document.querySelector<HTMLDivElement>("#app")!;
 
   app.innerHTML = `
+  <header>
+  <img src = "hq_logo.webp" alt = "Home Quest Logo" width = "150px" height = "150px">
     <h1>Home Quest Decoration Optimizer</h1>
+    </header>
     <form id="decoration-form">
       <div id="towns-container">
         <h2>Select Unlocked Towns:</h2>
@@ -57,7 +60,8 @@ export function setupInputForm() {
     <div id="results"></div>
   `;
 
-  const pasteListTextarea = document.querySelector<HTMLTextAreaElement>('#paste-list');
+  const pasteListTextarea =
+    document.querySelector<HTMLTextAreaElement>("#paste-list");
   if (pasteListTextarea) pasteListTextarea.remove();
 
   const selectAllCheckbox =
@@ -97,42 +101,46 @@ export function setupInputForm() {
     resultsDiv.innerHTML = "";
 
     const townNames: Record<string, string> = {
-      town1: 'Town 1',
-      town2: 'Town 2',
-      town3: 'Town 3',
-      town4: 'Town 4',
-      northern1: 'Northern Town 1',
-      northern2: 'Northern Town 2',
-      northern3: 'Northern Town 3',
-      evergarden: 'Evergarden'
+      town1: "Town 1",
+      town2: "Town 2",
+      town3: "Town 3",
+      town4: "Town 4",
+      northern1: "Northern Town 1",
+      northern2: "Northern Town 2",
+      northern3: "Northern Town 3",
+      evergarden: "Evergarden",
     };
 
-    towns.forEach(town => {
+    towns.forEach((town) => {
       const townResult = results[town];
 
-      if (townResult.green === 0 && townResult.blue === 0 && townResult.red === 0) {
+      if (
+        townResult.green === 0 &&
+        townResult.blue === 0 &&
+        townResult.red === 0
+      ) {
         return; // Skip towns with no decorations used
       }
 
-      const townSection = document.createElement('div');
-      townSection.className = 'town-result';
+      const townSection = document.createElement("div");
+      townSection.className = "town-result";
 
-      const townHeader = document.createElement('h3');
+      const townHeader = document.createElement("h3");
       townHeader.textContent = `Results for ${townNames[town] || town}`;
       townSection.appendChild(townHeader);
 
-      const heartValues = document.createElement('p');
+      const heartValues = document.createElement("p");
       heartValues.innerHTML = `
         <strong>Green:</strong> ${townResult.green} <span style="color: green;">&#x1F49A;</span><br>
         <strong>Blue:</strong> ${townResult.blue} <span style="color: blue;">&#x1F499;</span><br>
-        <strong>Red:</strong> ${townResult.red} <span style="color: red;">&#x1F49B;</span>
+        <strong>Red:</strong> ${townResult.red} <span style="color: red;">&#x1F497;</span>
       `;
       townSection.appendChild(heartValues);
 
-      const decorationList = document.createElement('ul');
+      const decorationList = document.createElement("ul");
       const decorationTotals: Record<string, number> = {};
 
-      townResult.decorations.forEach(decoration => {
+      townResult.decorations.forEach((decoration) => {
         if (!decorationTotals[decoration.name]) {
           decorationTotals[decoration.name] = 0;
         }
@@ -145,7 +153,7 @@ export function setupInputForm() {
           return inputOrder.indexOf(nameA) - inputOrder.indexOf(nameB);
         })
         .forEach(([name, total]) => {
-          const listItem = document.createElement('li');
+          const listItem = document.createElement("li");
           listItem.textContent = `${total}x ${name}`;
           decorationList.appendChild(listItem);
         });
@@ -179,7 +187,7 @@ export function setupInputForm() {
     { name: "Lake", category: "Nature Reserve" },
     { name: "Meadow", category: "Nature Reserve" },
     { name: "Gorgon", category: "Medusa" },
-    { name: "Golden Gorgon", category: "Medusa" }
+    { name: "Golden Gorgon", category: "Medusa" },
   ];
 
   const decorationInputs =
@@ -217,12 +225,14 @@ export function setupInputForm() {
   if (userData) {
     const { towns, decorationQuantities } = userData;
 
-    townCheckboxes.forEach(checkbox => {
+    townCheckboxes.forEach((checkbox) => {
       checkbox.checked = towns.includes(checkbox.value);
     });
 
     Object.entries(decorationQuantities).forEach(([name, quantity]) => {
-      const input = document.querySelector<HTMLInputElement>(`#decoration-${name}`);
+      const input = document.querySelector<HTMLInputElement>(
+        `#decoration-${name}`
+      );
       if (input) {
         input.value = (quantity as number).toString();
       }
