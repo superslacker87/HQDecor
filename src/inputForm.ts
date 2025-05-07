@@ -1,5 +1,9 @@
 import { optimizeDecorations } from "./optimizer";
 
+function sanitizeId(name: string): string {
+  return name.replace(/[^a-zA-Z0-9-_]/g, "-"); // Replace invalid characters with hyphens
+}
+
 function saveUserData(
   towns: string[],
   decorationQuantities: Record<string, number>
@@ -74,6 +78,12 @@ export function setupInputForm() {
     townCheckboxes.forEach((checkbox) => {
       checkbox.checked = isChecked;
     });
+  });
+
+  townCheckboxes.forEach((checkbox) => {
+    const townName = checkbox.value;
+    checkbox.id = `town-${sanitizeId(townName)}`; // Add id attribute
+    checkbox.name = `town-${sanitizeId(townName)}`; // Add name attribute
   });
 
   const form = document.querySelector<HTMLFormElement>("#decoration-form")!;
@@ -207,11 +217,11 @@ export function setupInputForm() {
 
     const label = document.createElement("label");
     label.textContent = `${name}:`;
-    label.htmlFor = `decoration-${name}`;
+    label.htmlFor = `decoration-${sanitizeId(name)}`;
 
     const input = document.createElement("input");
     input.type = "number";
-    input.id = `decoration-${name}`;
+    input.id = `decoration-${sanitizeId(name)}`;
     input.name = name;
     input.min = "0";
     input.value = "0";
@@ -231,7 +241,7 @@ export function setupInputForm() {
 
     Object.entries(decorationQuantities).forEach(([name, quantity]) => {
       const input = document.querySelector<HTMLInputElement>(
-        `#decoration-${name}`
+        `#decoration-${sanitizeId(name)}`
       );
       if (input) {
         input.value = (quantity as number).toString();
