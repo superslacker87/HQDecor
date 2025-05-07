@@ -6,4 +6,4 @@ Future changes planned:
 * Option to choose balanced across towns, rather than working to get one town to the 1000 max before moving on to the next.
 
 
-Contact me on Discord in the HomeQuest server (@Omaha3DPrints) or Reddit (MetaphoricMenagerie).
+Contact me on Discord in the HomeQuest server (@Omaha3DPrints) or Reddit (MetaphoricMenagerie) with any questions or suggestions.
