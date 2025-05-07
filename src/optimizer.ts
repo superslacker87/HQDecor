@@ -1,5 +1,7 @@
+// Import decorations data from JSON file
 import decorationsData from "./decorations.json";
 
+// Define types for decorations and town results
 type Decoration = {
   name: string;
   category: string;
@@ -15,6 +17,7 @@ type TownResult = {
   decorations: { name: string; quantity: number }[];
 };
 
+// Main function to optimize decorations for towns
 export function optimizeDecorations(
   towns: string[],
   decorationQuantities: Record<string, number>,
@@ -22,6 +25,7 @@ export function optimizeDecorations(
 ) {
   const results: Record<string, TownResult> = {};
 
+  // Initialize results for each town
   towns.forEach((town) => {
     results[town] = {
       green: 0,
@@ -31,6 +35,7 @@ export function optimizeDecorations(
     };
   });
 
+  // Map decoration quantities to their respective data
   const decorations = Object.entries(decorationQuantities)
     .map(([name, quantity]) => {
       const decorationData = decorationsData.find((d) => d.name === name);
@@ -38,11 +43,12 @@ export function optimizeDecorations(
     })
     .filter(Boolean) as (Decoration & { quantity: number })[];
 
+  // Find specific decorations (Meadow and Snowflake)
   const meadow = decorations.find((decoration) => decoration.name === "Meadow");
   const snowflake = decorations.find((decoration) => decoration.name === "Snowflake");
 
   if (valhallaOnly) {
-    // Filter Valhalla items for Evergarden and exclude them from other towns
+    // Filter decorations for Evergarden (Valhalla only) and other towns
     const valhallaDecorations = decorations.filter(
       (decoration) => decoration.category === "Valhalla"
     );
@@ -50,12 +56,15 @@ export function optimizeDecorations(
       (decoration) => decoration.category !== "Valhalla"
     );
 
+    // Assign decorations to towns
     towns.forEach((town) => {
       const townResult = results[town];
 
+      // Determine applicable decorations based on town type
       const applicableDecorations =
         town === "evergarden" ? valhallaDecorations : nonValhallaDecorations;
 
+      // Sort decorations to optimize balance
       applicableDecorations.sort((a, b) => {
         const aBalance =
           Math.abs(townResult.green + a.green - (townResult.blue + a.blue)) +
@@ -68,21 +77,25 @@ export function optimizeDecorations(
         return aBalance - bBalance; // Sort by balance improvement
       });
 
+      // Assign decorations to the town while respecting limits
       applicableDecorations.forEach((decoration) => {
         while (decoration.quantity > 0) {
           const newGreen = townResult.green + decoration.green;
           const newBlue = townResult.blue + decoration.blue;
           const newRed = townResult.red + decoration.red;
 
+          // Debugging logs for decoration assignment
           console.log(`Attempting to add decoration: ${decoration.name}`);
           console.log(`Current totals - Green: ${townResult.green}, Blue: ${townResult.blue}, Red: ${townResult.red}`);
           console.log(`New totals if added - Green: ${newGreen}, Blue: ${newBlue}, Red: ${newRed}`);
 
+          // Stop assigning decorations if all totals exceed 1000
           if (newGreen > 1000 && newBlue > 1000 && newRed > 1000) {
             console.log(`Stopping assignment for ${town} as all totals exceed 1000.`);
-            break; // Stop assigning decorations to this town if all three exceed 1000
+            break;
           }
 
+          // Update town totals and add decoration
           townResult.green = newGreen;
           townResult.blue = newBlue;
           townResult.red = newRed;
@@ -94,7 +107,7 @@ export function optimizeDecorations(
         }
       });
 
-      // Check for Meadow condition
+      // Check for Meadow condition (green or red near 1000)
       if (
         (townResult.green >= 997 && townResult.green <= 999) &&
         meadow &&
@@ -121,7 +134,7 @@ export function optimizeDecorations(
         meadow.quantity--;
       }
 
-      // Check for Snowflake condition
+      // Check for Snowflake condition (blue near 1000)
       if (
         (townResult.blue >= 996 && townResult.blue <= 999) &&
         snowflake &&
@@ -140,6 +153,7 @@ export function optimizeDecorations(
     towns.forEach((town) => {
       const townResult = results[town];
 
+      // Sort decorations to optimize balance
       decorations.sort((a, b) => {
         const aBalance =
           Math.abs(townResult.green + a.green - (townResult.blue + a.blue)) +
@@ -152,6 +166,7 @@ export function optimizeDecorations(
         return aBalance - bBalance; // Sort by balance improvement
       });
 
+      // Assign decorations to the town while respecting limits
       decorations.forEach((decoration) => {
         while (
           decoration.quantity > 0 &&
@@ -167,7 +182,7 @@ export function optimizeDecorations(
         }
       });
 
-      // Check for Meadow condition
+      // Check for Meadow condition (green or red near 1000)
       if (
         (townResult.green >= 997 && townResult.green <= 999) &&
         meadow &&
@@ -194,7 +209,7 @@ export function optimizeDecorations(
         meadow.quantity--;
       }
 
-      // Check for Snowflake condition
+      // Check for Snowflake condition (blue near 1000)
       if (
         (townResult.blue >= 996 && townResult.blue <= 999) &&
         snowflake &&
