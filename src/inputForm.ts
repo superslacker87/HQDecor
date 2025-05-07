@@ -41,20 +41,21 @@ export function setupInputForm() {
       <div id="towns-container">
         <h2>Select Unlocked Towns:</h2>
         <div id="towns-inputs">
-          <label><input type="checkbox" id="select-all-towns"> Select All/None</label>
-          <label><input type="checkbox" class="town-checkbox" value="town1"> Town 1</label>
+          <p><label><input type="checkbox" id="select-all-towns"> Select All/None</label></p>
+          <p><label><input type="checkbox" class="town-checkbox" value="town1"> Town 1</label>
           <label><input type="checkbox" class="town-checkbox" value="town2"> Town 2</label>
           <label><input type="checkbox" class="town-checkbox" value="town3"> Town 3</label>
-          <label><input type="checkbox" class="town-checkbox" value="town4"> Town 4</label>
-             <label><input type="checkbox" class="town-checkbox" value="evergarden"> Evergarden</label>
-          <label><input type="checkbox" class="town-checkbox" value="northern1"> Northern Town 1</label>
+          <label><input type="checkbox" class="town-checkbox" value="town4"> Town 4</label></p>
+          <p><label><input type="checkbox" class="town-checkbox" value="evergarden"> Evergarden</label></p>
+          <p><label><input type="checkbox" class="town-checkbox" value="northern1"> Northern Town 1</label>
           <label><input type="checkbox" class="town-checkbox" value="northern2"> Northern Town 2</label>
-          <label><input type="checkbox" class="town-checkbox" value="northern3"> Northern Town 3</label>
+          <label><input type="checkbox" class="town-checkbox" value="northern3"> Northern Town 3</label></p>
        
         </div>
       </div>
 
       <div id="decorations-container">
+      <p><button type="button" id="reset-values">Reset All Values</button></p>
         <h2>Enter Decoration Quantities:</h2>
         <div id="decoration-inputs">
           <!-- Inputs will be dynamically added here -->
@@ -63,10 +64,10 @@ export function setupInputForm() {
 
       <div id="options-container">
         <h2>Options:</h2>
-        <label><input type="checkbox" id="valhalla-only"> Allow Valhalla items only in Evergarden</label>
-        <button type="button" id="reset-values">Reset All Values</button>
+        <p><label><input type="checkbox" id="valhalla-only"> Only place Valhalla items in the Evergarden</label></p>
+        <p><button type="button" id="reset-values">Reset All Values</button></p>
       </div>
-
+      <h2>Run Tool:</h2>
       <button type="submit">Optimize</button>
     </form>
     <div id="results"></div>
@@ -113,7 +114,10 @@ export function setupInputForm() {
     event.preventDefault();
 
     const towns = Array.from(townCheckboxes)
-      .filter((checkbox) => checkbox.checked)
+      .filter((checkbox) => {
+        console.log(`Checkbox value: ${checkbox.value}, Checked: ${checkbox.checked}`); // Debugging log
+        return checkbox.checked;
+      })
       .map((checkbox) => checkbox.value);
 
     const decorationQuantities = Array.from(
@@ -133,6 +137,61 @@ export function setupInputForm() {
       valhallaOnlyCheckbox.checked
     );
 
+    console.log("Optimization started");
+    console.log("Selected towns:", towns);
+
+    if (towns.includes("evergarden")) {
+      console.log("Evergarden is included in the selected towns.");
+
+      // Filter decorations for Evergarden to only include Valhalla items
+      const evergardenDecorations = results["evergarden"].decorations.filter(
+        (decoration) => {
+          const isValhalla = decorations.find(
+            (d) => d.name === decoration.name && d.category === "Valhalla"
+          );
+          if (!isValhalla) {
+            console.log(
+              `Excluding non-Valhalla decoration from Evergarden: ${decoration.name}`
+            );
+            decorationQuantities[decoration.name] += decoration.quantity;
+          }
+          return isValhalla;
+        }
+      );
+
+      // Update Evergarden results with valid decorations
+      results["evergarden"].decorations = evergardenDecorations;
+
+      // Recalculate heart values for Evergarden
+      results["evergarden"].green = evergardenDecorations.reduce(
+        (sum, decoration) => {
+          const decorationData = decorations.find((d) => d.name === decoration.name);
+          return sum + ((decorationData?.green || 0) * decoration.quantity);
+        },
+        0
+      );
+      results["evergarden"].blue = evergardenDecorations.reduce(
+        (sum, decoration) => {
+          const decorationData = decorations.find((d) => d.name === decoration.name);
+          return sum + ((decorationData?.blue || 0) * decoration.quantity);
+        },
+        0
+      );
+      results["evergarden"].red = evergardenDecorations.reduce(
+        (sum, decoration) => {
+          const decorationData = decorations.find((d) => d.name === decoration.name);
+          return sum + ((decorationData?.red || 0) * decoration.quantity);
+        },
+        0
+      );
+
+      console.log(
+        `Evergarden totals - Green: ${results["evergarden"].green}, Blue: ${results["evergarden"].blue}, Red: ${results["evergarden"].red}`
+      );
+    } else {
+      console.log("Evergarden is not included in the selected towns.");
+    }
+
     const resultsDiv = document.querySelector<HTMLDivElement>("#results")!;
     resultsDiv.innerHTML = "";
 
@@ -150,10 +209,11 @@ export function setupInputForm() {
     towns.forEach((town) => {
       const townResult = results[town];
 
-      if (
-        townResult.green === 0 &&
+      if (!townResult ||
+        (townResult.green === 0 &&
         townResult.blue === 0 &&
-        townResult.red === 0
+        townResult.red === 0 &&
+        (!townResult.decorations || townResult.decorations.length === 0))
       ) {
         return; // Skip towns with no decorations used
       }
@@ -202,6 +262,35 @@ export function setupInputForm() {
       townSection.appendChild(decorationList);
       resultsDiv.appendChild(townSection);
     });
+
+    // Check for unused decorations
+    const unusedDecorations = decorations.map((decoration) => {
+      const usedQuantity = Object.values(results).flatMap((town) =>
+        town.decorations.filter((d) => d.name === decoration.name)
+      ).reduce((sum, d) => sum + d.quantity, 0);
+      const totalQuantity = decorationQuantities[decoration.name] || 0;
+      const unusedQuantity = totalQuantity - usedQuantity; // Corrected subtraction logic
+      return { ...decoration, unusedQuantity };
+    }).filter((decoration) => decoration.unusedQuantity > 0);
+
+    if (unusedDecorations.length > 0) {
+      const unusedSection = document.createElement("div");
+      unusedSection.className = "unused-decorations";
+
+      const unusedHeader = document.createElement("h3");
+      unusedHeader.textContent = "Unused Decorations:";
+      unusedSection.appendChild(unusedHeader);
+
+      const unusedList = document.createElement("ul");
+      unusedDecorations.forEach(({ name, green, blue, red, unusedQuantity }) => {
+        const listItem = document.createElement("li");
+        listItem.innerHTML = `${unusedQuantity}x ${name} (<span style='color: green;'>&#x1F49A;</span> ${green * unusedQuantity}, <span style='color: blue;'>&#x1F499;</span> ${blue * unusedQuantity}, <span style='color: red;'>&#x1F497;</span> ${red * unusedQuantity})`;
+        unusedList.appendChild(listItem);
+      });
+
+      unusedSection.appendChild(unusedList);
+      resultsDiv.appendChild(unusedSection);
+    }
   });
 
   const decorationInputs =
