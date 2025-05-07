@@ -1,0 +1,170 @@
+[
+  {
+    "name": "Greenery Variant A",
+    "category": "Town Essentials",
+    "green": 4,
+    "blue": 0,
+    "red": 0
+  },
+  {
+    "name": "Greenery Variant B",
+    "category": "Town Essentials",
+    "green": 3,
+    "blue": 1,
+    "red": 0
+  },
+  {
+    "name": "The Globe",
+    "category": "Town Essentials",
+    "green": 0,
+    "blue": 12,
+    "red": 0
+  },
+  {
+    "name": "Heroic Horse",
+    "category": "Town Essentials",
+    "green": 3,
+    "blue": 0,
+    "red": 9
+  },
+  {
+    "name": "Tree of Life",
+    "category": "Valhalla",
+    "green": 9,
+    "blue": 0,
+    "red": 3
+  },
+  {
+    "name": "Freya's Fortune",
+    "category": "Valhalla",
+    "green": 0,
+    "blue": 0,
+    "red": 12
+  },
+  {
+    "name": "Golden Freya",
+    "category": "Valhalla",
+    "green": 7,
+    "blue": 7,
+    "red": 7
+  },
+  {
+    "name": "Tree of Knowledge",
+    "category": "Valhalla",
+    "green": 0,
+    "blue": 22,
+    "red": 0
+  },
+  {
+    "name": "Theatre",
+    "category": "Oracle",
+    "green": 10,
+    "blue": 1,
+    "red": 1
+  },
+  {
+    "name": "Golden Theatre",
+    "category": "Oracle",
+    "green": 7,
+    "blue": 7,
+    "red": 7
+  },
+  {
+    "name": "Wizard's Staff",
+    "category": "Mercury",
+    "green": 0,
+    "blue": 15,
+    "red": 7
+  },
+  {
+    "name": "Park",
+    "category": "Central Park",
+    "green": 4,
+    "blue": 0,
+    "red": 0
+  },
+  {
+    "name": "Forest",
+    "category": "Central Park",
+    "green": 6,
+    "blue": 0,
+    "red": 0
+  },
+  {
+    "name": "Observatory",
+    "category": "Central Park",
+    "green": 3,
+    "blue": 9,
+    "red": 0
+  },
+  {
+    "name": "The Deer",
+    "category": "Reindeer Fest",
+    "green": 11,
+    "blue": 0,
+    "red": 11
+  },
+  {
+    "name": "Elf House",
+    "category": "Reindeer Fest",
+    "green": 0,
+    "blue": 2,
+    "red": 2
+  },
+  {
+    "name": "Snowflake",
+    "category": "Reindeer Fest",
+    "green": 0,
+    "blue": 4,
+    "red": 0
+  },
+  {
+    "name": "Cozy Cabin",
+    "category": "Reindeer Fest",
+    "green": 0,
+    "blue": 0,
+    "red": 12
+  },
+  {
+    "name": "Rocks",
+    "category": "Nature Reserve",
+    "green": 2,
+    "blue": 2,
+    "red": 0
+  },
+  {
+    "name": "Ridge",
+    "category": "Nature Reserve",
+    "green": 3,
+    "blue": 0,
+    "red": 3
+  },
+  {
+    "name": "Lake",
+    "category": "Nature Reserve",
+    "green": 2,
+    "blue": 2,
+    "red": 0
+  },
+  {
+    "name": "Meadow",
+    "category": "Nature Reserve",
+    "green": 3,
+    "blue": 0,
+    "red": 3
+  },
+  {
+    "name": "Gorgon",
+    "category": "Medusa",
+    "green": 6,
+    "blue": 0,
+    "red": 6
+  },
+  {
+    "name": "Golden Gorgon",
+    "category": "Medusa",
+    "green": 7,
+    "blue": 7,
+    "red": 7
+  }
+]
