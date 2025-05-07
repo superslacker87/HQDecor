@@ -35,7 +35,12 @@ export function optimizeDecorations(towns: string[], decorationQuantities: Recor
   towns.forEach(town => {
     const townResult = results[town];
 
-    decorations.sort((a, b) => {
+    // Filter decorations for Evergarden to only include Valhalla items
+    const applicableDecorations = town === "evergarden"
+      ? decorations.filter(decoration => decoration.category === "Valhalla")
+      : decorations;
+
+    applicableDecorations.sort((a, b) => {
       const aBalance = Math.abs((townResult.green + a.green) - (townResult.blue + a.blue)) +
                        Math.abs((townResult.green + a.green) - (townResult.red + a.red)) +
                        Math.abs((townResult.blue + a.blue) - (townResult.red + a.red));
@@ -45,7 +50,7 @@ export function optimizeDecorations(towns: string[], decorationQuantities: Recor
       return aBalance - bBalance; // Sort by balance improvement
     });
 
-    decorations.forEach(decoration => {
+    applicableDecorations.forEach(decoration => {
       while (
         decoration.quantity > 0 &&
         townResult.green + decoration.green <= 1000 &&
