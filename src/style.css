@@ -113,7 +113,7 @@ button:focus-visible {
 }
 .decoration-input-group label {
   margin-right: 0; /* Remove margin */
-  width: 25%; /* Set a fixed width for the label */
+  width: 40%; /* Set a fixed width for the label */
 }
 
 .decoration-input-group label::after {
@@ -136,4 +136,10 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+img#header {
+  border-radius: 25px;
+  width: 150px;
+  height: 150px;
 }

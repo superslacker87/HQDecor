@@ -1,4 +1,5 @@
 import { optimizeDecorations } from "./optimizer";
+import decorations from "./decorations.json";
 
 function sanitizeId(name: string): string {
   return name.replace(/[^a-zA-Z0-9-_]/g, "-"); // Replace invalid characters with hyphens
@@ -33,7 +34,7 @@ export function setupInputForm() {
 
   app.innerHTML = `
   <header>
-  <img src = "hq_logo.webp" alt = "Home Quest Logo" width = "150px" height = "150px">
+  <img id="header" src="hq_logo.webp" alt="Home Quest Logo">
     <h1>Home Quest Decoration Optimizer</h1>
     </header>
     <form id="decoration-form">
@@ -197,38 +198,11 @@ export function setupInputForm() {
     });
   });
 
-  const decorations = [
-    { name: "Greenery Variant A", category: "Town Essentials" },
-    { name: "Greenery Variant B", category: "Town Essentials" },
-    { name: "The Globe", category: "Town Essentials" },
-    { name: "Heroic Horse", category: "Town Essentials" },
-    { name: "Tree of Life", category: "Valhalla" },
-    { name: "Freya's Fortune", category: "Valhalla" },
-    { name: "Golden Freya", category: "Valhalla" },
-    { name: "Tree of Knowledge", category: "Valhalla" },
-    { name: "Theatre", category: "Oracle" },
-    { name: "Golden Theatre", category: "Oracle" },
-    { name: "Wizard's Staff", category: "Mercury" },
-    { name: "Park", category: "Central Park" },
-    { name: "Forest", category: "Central Park" },
-    { name: "Observatory", category: "Central Park" },
-    { name: "The Deer", category: "Reindeer Fest" },
-    { name: "Elf House", category: "Reindeer Fest" },
-    { name: "Snowflake", category: "Reindeer Fest" },
-    { name: "Cozy Cabin", category: "Reindeer Fest" },
-    { name: "Rocks", category: "Nature Reserve" },
-    { name: "Ridge", category: "Nature Reserve" },
-    { name: "Lake", category: "Nature Reserve" },
-    { name: "Meadow", category: "Nature Reserve" },
-    { name: "Gorgon", category: "Medusa" },
-    { name: "Golden Gorgon", category: "Medusa" },
-  ];
-
   const decorationInputs =
     document.querySelector<HTMLDivElement>("#decoration-inputs")!;
   let currentCategory = "";
 
-  decorations.forEach(({ name, category }) => {
+  decorations.forEach(({ name, category, green, blue, red }) => {
     if (category !== currentCategory) {
       currentCategory = category;
       const categoryHeader = document.createElement("h3");
@@ -240,7 +214,7 @@ export function setupInputForm() {
     inputGroup.className = "decoration-input-group";
 
     const label = document.createElement("label");
-    label.textContent = `${name}:`;
+    label.innerHTML = `${name} (<span style='color: green;'>&#x1F49A;</span> ${green}, <span style='color: blue;'>&#x1F499;</span> ${blue}, <span style='color: red;'>&#x1F497;</span> ${red}):`;
     label.htmlFor = `decoration-${sanitizeId(name)}`;
 
     const input = document.createElement("input");
