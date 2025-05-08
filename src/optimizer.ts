@@ -84,14 +84,8 @@ export function optimizeDecorations(
           const newBlue = townResult.blue + decoration.blue;
           const newRed = townResult.red + decoration.red;
 
-          // Debugging logs for decoration assignment
-          console.log(`Attempting to add decoration: ${decoration.name}`);
-          console.log(`Current totals - Green: ${townResult.green}, Blue: ${townResult.blue}, Red: ${townResult.red}`);
-          console.log(`New totals if added - Green: ${newGreen}, Blue: ${newBlue}, Red: ${newRed}`);
-
-          // Stop assigning decorations if all totals exceed 1000
-          if (newGreen > 1000 && newBlue > 1000 && newRed > 1000) {
-            console.log(`Stopping assignment for ${town} as all totals exceed 1000.`);
+          // Stop assigning decorations if any total exceeds 1000 (Valhalla-only mode)
+          if (newGreen > 1000 || newBlue > 1000 || newRed > 1000) {
             break;
           }
 
@@ -101,9 +95,6 @@ export function optimizeDecorations(
           townResult.red = newRed;
           townResult.decorations.push({ name: decoration.name, quantity: 1 });
           decoration.quantity--;
-
-          console.log(`Added decoration: ${decoration.name}`);
-          console.log(`Updated totals - Green: ${townResult.green}, Blue: ${townResult.blue}, Red: ${townResult.red}`);
         }
       });
 
@@ -113,7 +104,6 @@ export function optimizeDecorations(
         meadow &&
         meadow.quantity > 0
       ) {
-        console.log(`Adding Meadow to ${town} due to green total: ${townResult.green}`);
         townResult.green += meadow.green;
         townResult.blue += meadow.blue;
         townResult.red += meadow.red;
@@ -126,7 +116,6 @@ export function optimizeDecorations(
         meadow &&
         meadow.quantity > 0
       ) {
-        console.log(`Adding Meadow to ${town} due to red total: ${townResult.red}`);
         townResult.green += meadow.green;
         townResult.blue += meadow.blue;
         townResult.red += meadow.red;
@@ -140,7 +129,6 @@ export function optimizeDecorations(
         snowflake &&
         snowflake.quantity > 0
       ) {
-        console.log(`Adding Snowflake to ${town} due to blue total: ${townResult.blue}`);
         townResult.green += snowflake.green;
         townResult.blue += snowflake.blue;
         townResult.red += snowflake.red;
@@ -188,7 +176,6 @@ export function optimizeDecorations(
         meadow &&
         meadow.quantity > 0
       ) {
-        console.log(`Adding Meadow to ${town} due to green total: ${townResult.green}`);
         townResult.green += meadow.green;
         townResult.blue += meadow.blue;
         townResult.red += meadow.red;
@@ -201,7 +188,6 @@ export function optimizeDecorations(
         meadow &&
         meadow.quantity > 0
       ) {
-        console.log(`Adding Meadow to ${town} due to red total: ${townResult.red}`);
         townResult.green += meadow.green;
         townResult.blue += meadow.blue;
         townResult.red += meadow.red;
@@ -215,7 +201,6 @@ export function optimizeDecorations(
         snowflake &&
         snowflake.quantity > 0
       ) {
-        console.log(`Adding Snowflake to ${town} due to blue total: ${townResult.blue}`);
         townResult.green += snowflake.green;
         townResult.blue += snowflake.blue;
         townResult.red += snowflake.red;

@@ -55,7 +55,7 @@ export function setupInputForm() {
       </div>
 
       <div id="decorations-container">
-      <p><button type="button" id="reset-values">Reset All Values</button></p>
+      <p><button type="button" id="reset-values-top">Reset All Values</button></p>
         <h2>Enter Decoration Quantities:</h2>
         <div id="decoration-inputs">
           <!-- Inputs will be dynamically added here -->
@@ -65,7 +65,7 @@ export function setupInputForm() {
       <div id="options-container">
         <h2>Options:</h2>
         <p><label><input type="checkbox" id="valhalla-only"> Only place Valhalla items in the Evergarden</label></p>
-        <p><button type="button" id="reset-values">Reset All Values</button></p>
+        <p><button type="button" id="reset-values-bottom">Reset All Values</button></p>
       </div>
       <h2>Run Tool:</h2>
       <button type="submit">Optimize</button>
@@ -98,17 +98,22 @@ export function setupInputForm() {
   const form = document.querySelector<HTMLFormElement>("#decoration-form")!;
   const valhallaOnlyCheckbox =
     document.querySelector<HTMLInputElement>("#valhalla-only")!;
-  const resetValuesButton =
-    document.querySelector<HTMLButtonElement>("#reset-values")!;
+  const resetValuesTopButton =
+    document.querySelector<HTMLButtonElement>("#reset-values-top")!;
+  const resetValuesBottomButton =
+    document.querySelector<HTMLButtonElement>("#reset-values-bottom")!;
 
-  resetValuesButton.addEventListener("click", () => {
+  function resetAllDecorationInputs() {
     const decorationInputs = document.querySelectorAll<HTMLInputElement>(
       ".decoration-input-group input"
     );
     decorationInputs.forEach((input) => {
       input.value = "0";
     });
-  });
+  }
+
+  resetValuesTopButton.addEventListener("click", resetAllDecorationInputs);
+  resetValuesBottomButton.addEventListener("click", resetAllDecorationInputs);
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
