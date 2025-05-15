@@ -1,4 +1,4 @@
-import { optimizeDecorations } from "./optimizer";
+import { optimizeDecorations, optimizeDecorationsBalanced } from "./optimizer";
 import decorations from "./decorations.json";
 
 function sanitizeId(name: string): string {
@@ -29,35 +29,27 @@ function loadUserData() {
   return null;
 }
 
-// Updated the exportToCsv function to accept decorationQuantities and results as arguments
-function exportToCsv(decorationQuantities: Record<string, number>, results: Record<string, any>, filename: string) {
+// Explicitly type all parameters and variables to resolve implicit 'any' errors
+function exportToCsv(
+  decorationQuantities: Record<string, number>,
+  results: Record<string, { decorations: { name: string; quantity: number }[] }>,
+  filename: string
+) {
   const headers = [
     "Decoration Name",
     "Category",
     "Unused",
-    "Town One",
-    "Town Two",
-    "Town Three",
-    "Town Four",
-    "Evergarden",
-    "Northern Town One",
-    "Northern Town Two",
-    "Northern Town Three",
+    ...Object.keys(results), // Dynamically include all town names
   ];
 
-  const rows = Object.entries(decorationQuantities).map(([name]) => {
-    const category = decorations.find((d) => d.name === name)?.category || "";
-    const townQuantities = [
-      results["Town 1"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-      results["Town 2"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-      results["Town 3"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-      results["Town 4"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-      results["Evergarden"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-      results["Northern Town One"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-      results["Northern Town Two"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-      results["Northern Town Three"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
-    ];
-    const unused = decorationQuantities[name] - townQuantities.reduce((sum, qty) => sum + qty, 0);
+  const rows = Object.entries(decorationQuantities).map(([name, quantity]: [string, number]) => {
+    const category = decorations.find((d: { name: string; category: string }) => d.name === name)?.category || "";
+    const townQuantities = Object.keys(results).map((town: string) => {
+      const townDecorations = results[town]?.decorations || [];
+      const decoration = townDecorations.find((d: { name: string; quantity: number }) => d.name === name);
+      return decoration ? decoration.quantity : 0;
+    });
+    const unused = quantity - townQuantities.reduce((sum: number, qty: number) => sum + qty, 0);
 
     // Debugging log to verify town quantities and unused values
     console.log(`Decoration: ${name}, Town Quantities: ${townQuantities}, Unused: ${unused}`);
@@ -67,7 +59,7 @@ function exportToCsv(decorationQuantities: Record<string, number>, results: Reco
 
   console.log("Updated rows for CSV export with corrected headers and rows:", rows);
 
-  const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+  const csvContent = [headers.join(","), ...rows.map((row: (string | number)[]) => row.join(","))].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -265,6 +257,16 @@ export function setupInputForm() {
   resetValuesTopButton.addEventListener("click", resetAllDecorationInputs);
   resetValuesBottomButton.addEventListener("click", resetAllDecorationInputs);
 
+  // Added a radio button group for selecting optimization method
+  const optimizationMethodContainer = document.createElement("div");
+  optimizationMethodContainer.id = "optimization-method-container";
+  optimizationMethodContainer.innerHTML = `
+    <h2>Optimization Method:</h2>
+    <label><input type="radio" name="optimization-method" value="maximum" checked> Maximum</label>
+    <label><input type="radio" name="optimization-method" value="balanced"> Balanced</label>
+  `;
+  form.insertBefore(optimizationMethodContainer, form.querySelector("#options-container"));
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
@@ -283,20 +285,34 @@ export function setupInputForm() {
 
     saveUserData(towns, decorationQuantities);
 
-    const results = optimizeDecorations(
-      towns,
-      decorationQuantities,
-      valhallaOnlyCheckbox.checked
-    );
+    const selectedMethod = document.querySelector<HTMLInputElement>(
+      "input[name='optimization-method']:checked"
+    )?.value || "maximum";
+
+    let results;
+    if (selectedMethod === "balanced") {
+      results = optimizeDecorationsBalanced(
+        towns,
+        decorationQuantities,
+        valhallaOnlyCheckbox.checked
+      );
+    } else {
+      results = optimizeDecorations(
+        towns,
+        decorationQuantities,
+        valhallaOnlyCheckbox.checked
+      );
+    }
 
     // Add debugging logs to trace data output after the optimization
     console.log("Optimization results:", JSON.stringify(results, null, 2));
 
     if (towns.includes("evergarden")) {
       const evergardenDecorations = results["evergarden"].decorations.filter(
-        (decoration) => {
+        (decoration: { name: string; quantity: number }) => {
           const isValhalla = decorations.find(
-            (d) => d.name === decoration.name && d.category === "Valhalla"
+            (d: { name: string; category: string }) =>
+              d.name === decoration.name && d.category === "Valhalla"
           );
           if (!isValhalla) {
             decorationQuantities[decoration.name] += decoration.quantity;
@@ -308,22 +324,28 @@ export function setupInputForm() {
       results["evergarden"].decorations = evergardenDecorations;
 
       results["evergarden"].green = evergardenDecorations.reduce(
-        (sum, decoration) => {
-          const decorationData = decorations.find((d) => d.name === decoration.name);
+        (sum: number, decoration: { name: string; quantity: number }) => {
+          const decorationData = decorations.find(
+            (d: { name: string; green: number }) => d.name === decoration.name
+          );
           return sum + ((decorationData?.green || 0) * decoration.quantity);
         },
         0
       );
       results["evergarden"].blue = evergardenDecorations.reduce(
-        (sum, decoration) => {
-          const decorationData = decorations.find((d) => d.name === decoration.name);
+        (sum: number, decoration: { name: string; quantity: number }) => {
+          const decorationData = decorations.find(
+            (d: { name: string; blue: number }) => d.name === decoration.name
+          );
           return sum + ((decorationData?.blue || 0) * decoration.quantity);
         },
         0
       );
       results["evergarden"].red = evergardenDecorations.reduce(
-        (sum, decoration) => {
-          const decorationData = decorations.find((d) => d.name === decoration.name);
+        (sum: number, decoration: { name: string; quantity: number }) => {
+          const decorationData = decorations.find(
+            (d: { name: string; red: number }) => d.name === decoration.name
+          );
           return sum + ((decorationData?.red || 0) * decoration.quantity);
         },
         0
@@ -374,7 +396,7 @@ export function setupInputForm() {
       const decorationList = document.createElement("ul");
       const decorationTotals: Record<string, number> = {};
 
-      townResult.decorations.forEach((decoration) => {
+      townResult.decorations.forEach((decoration: { name: string; quantity: number }) => {
         if (!decorationTotals[decoration.name]) {
           decorationTotals[decoration.name] = 0;
         }
@@ -401,14 +423,14 @@ export function setupInputForm() {
       resultsDiv.appendChild(townSection);
     });
 
-    const unusedDecorations = decorations.map((decoration) => {
-      const usedQuantity = Object.values(results).flatMap((town) =>
-        town.decorations.filter((d) => d.name === decoration.name)
-      ).reduce((sum, d) => sum + d.quantity, 0);
+    const unusedDecorations = decorations.map((decoration: { name: string; green: number; blue: number; red: number }) => {
+      const usedQuantity = Object.values(results).flatMap((town: { decorations: { name: string; quantity: number }[] }) =>
+        town.decorations.filter((d: { name: string }) => d.name === decoration.name)
+      ).reduce((sum: number, d: { quantity: number }) => sum + d.quantity, 0);
       const totalQuantity = decorationQuantities[decoration.name] || 0;
       const unusedQuantity = totalQuantity - usedQuantity;
       return { ...decoration, unusedQuantity };
-    }).filter((decoration) => decoration.unusedQuantity > 0);
+    }).filter((decoration: { unusedQuantity: number }) => decoration.unusedQuantity > 0);
 
     if (unusedDecorations.length > 0) {
       const unusedSection = document.createElement("div");
@@ -536,5 +558,21 @@ export function setupInputForm() {
       }
     };
     fileInput.click();
+  });
+
+  // Fix implicit 'any' types in other parts of the file
+  document.querySelectorAll<HTMLInputElement>(".decoration-input-group input").forEach((input) => {
+    input.addEventListener("change", (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      console.log(`Input changed: ${target.name} = ${target.value}`);
+    });
+  });
+
+  const townResults = document.querySelectorAll<HTMLLIElement>(".town-result li");
+  townResults.forEach((li: HTMLLIElement) => {
+    const match = li.textContent?.match(/^\d+x (.+) \(/);
+    if (match) {
+      console.log(`Matched decoration: ${match[1]}`);
+    }
   });
 }

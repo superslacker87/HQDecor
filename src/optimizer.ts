@@ -1,5 +1,6 @@
 // Import decorations data from JSON file
 import decorationsData from "./decorations.json";
+import decorations from "./decorations.json";
 
 // Define types for decorations and town results
 type Decoration = {
@@ -218,6 +219,115 @@ export function optimizeDecorations(
       }
     });
   }
+
+  return results;
+}
+
+// Function to distribute decorations across towns in a balanced way
+export function optimizeDecorationsBalanced(
+  towns: string[],
+  decorationQuantities: Record<string, number>,
+  valhallaOnly: boolean
+): Record<string, any> {
+  const results: Record<string, any> = {};
+
+  // Initialize results for each town
+  towns.forEach((town) => {
+    results[town] = {
+      decorations: [],
+      green: 0,
+      blue: 0,
+      red: 0,
+    };
+  });
+
+  // Separate Valhalla decorations if the option is enabled
+  const valhallaDecorations = Object.entries(decorationQuantities).filter(
+    ([name]) => {
+      const isValhalla = decorations.find(
+        (d: { name: string; category: string }) =>
+          d.name === name && d.category === "Valhalla"
+      );
+      return isValhalla;
+    }
+  );
+
+  const nonValhallaDecorations = Object.entries(decorationQuantities).filter(
+    ([name, quantity]) => {
+      const isValhalla = decorations.find(
+        (d: { name: string; category: string }) =>
+          d.name === name && d.category === "Valhalla"
+      );
+      return !isValhalla && quantity > 0;
+    }
+  );
+
+  // Distribute Valhalla decorations to Evergarden if the option is enabled
+  if (valhallaOnly && towns.includes("evergarden")) {
+    valhallaDecorations.forEach(([name, quantity]) => {
+      const decoration = decorations.find(
+        (d: { name: string }) => d.name === name
+      );
+
+      while (quantity > 0) {
+        const evergardenResult = results["evergarden"];
+
+        if (
+          decoration &&
+          evergardenResult.green + decoration.green <= 1000 &&
+          evergardenResult.blue + decoration.blue <= 1000 &&
+          evergardenResult.red + decoration.red <= 1000
+        ) {
+          evergardenResult.decorations.push({ name, quantity: 1 });
+          evergardenResult.green += decoration.green;
+          evergardenResult.blue += decoration.blue;
+          evergardenResult.red += decoration.red;
+          quantity--;
+          decorationQuantities[name]--; // Update global pool
+        } else {
+          break;
+        }
+      }
+    });
+  }
+
+  // Combine Valhalla and non-Valhalla decorations if the option is disabled
+  const allDecorations = valhallaOnly
+    ? nonValhallaDecorations
+    : [...valhallaDecorations, ...nonValhallaDecorations];
+
+  // Distribute decorations across all towns
+  let townIndex = 0;
+  allDecorations.forEach(([name, quantity]) => {
+    while (quantity > 0) {
+      const town = towns[townIndex];
+      if (town === "evergarden" && valhallaOnly) {
+        townIndex = (townIndex + 1) % towns.length;
+        continue;
+      }
+
+      const townResult = results[town];
+      const decoration = decorations.find(
+        (d: { name: string }) => d.name === name
+      );
+
+      if (
+        decoration &&
+        townResult.green + decoration.green <= 1000 &&
+        townResult.blue + decoration.blue <= 1000 &&
+        townResult.red + decoration.red <= 1000
+      ) {
+        townResult.decorations.push({ name, quantity: 1 });
+        townResult.green += decoration.green;
+        townResult.blue += decoration.blue;
+        townResult.red += decoration.red;
+        quantity--;
+        decorationQuantities[name]--; // Update global pool
+      }
+
+      townIndex = (townIndex + 1) % towns.length; // Rotate to the next town
+    }
+  });
 
   return results;
 }
