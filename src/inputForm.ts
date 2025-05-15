@@ -2,7 +2,7 @@ import { optimizeDecorations, optimizeDecorationsBalanced } from "./optimizer";
 import decorations from "./decorations.json";
 
 function sanitizeId(name: string): string {
-  return name.replace(/[^a-zA-Z0-9-_]/g, "-"); // Replace invalid characters with hyphens
+  return name.replace(/[^a-zA-Z0-9-_]/g, "-");
 }
 
 function saveUserData(
@@ -29,7 +29,6 @@ function loadUserData() {
   return null;
 }
 
-// Explicitly type all parameters and variables to resolve implicit 'any' errors
 function exportToCsv(
   decorationQuantities: Record<string, number>,
   results: Record<string, { decorations: { name: string; quantity: number }[] }>,
@@ -39,7 +38,7 @@ function exportToCsv(
     "Decoration Name",
     "Category",
     "Unused",
-    ...Object.keys(results), // Dynamically include all town names
+    ...Object.keys(results),
   ];
 
   const rows = Object.entries(decorationQuantities).map(([name, quantity]: [string, number]) => {
@@ -50,14 +49,8 @@ function exportToCsv(
       return decoration ? decoration.quantity : 0;
     });
     const unused = quantity - townQuantities.reduce((sum: number, qty: number) => sum + qty, 0);
-
-    // Debugging log to verify town quantities and unused values
-    console.log(`Decoration: ${name}, Town Quantities: ${townQuantities}, Unused: ${unused}`);
-
     return [name, category, unused, ...townQuantities];
   });
-
-  console.log("Updated rows for CSV export with corrected headers and rows:", rows);
 
   const csvContent = [headers.join(","), ...rows.map((row: (string | number)[]) => row.join(","))].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv" });
@@ -71,21 +64,14 @@ function exportToCsv(
   URL.revokeObjectURL(url);
 }
 
-// Added debugging logs to trace issues with the "Unused" column during import
 function importData(file: File, callback: (data: any) => void) {
   const reader = new FileReader();
   reader.onload = (event) => {
     try {
       const content = event.target?.result as string;
-      console.log("File content loaded:", content); // Debugging log
-
       if (file.type === "text/csv") {
         const rows = content.split(/\r?\n/).filter(Boolean);
-        console.log("CSV rows:", rows); // Debugging log
-
         const headers = rows.shift()?.split(",") || [];
-        console.log("CSV headers:", headers); // Debugging log
-
         const data = rows.map((row) => {
           const values = row.split(",");
           return headers.reduce((acc, header, index) => {
@@ -93,10 +79,6 @@ function importData(file: File, callback: (data: any) => void) {
             return acc;
           }, {} as Record<string, string>);
         });
-
-        console.log("Mapped CSV data:", data); // Debugging log
-
-        // Ensure the "Unused" column is correctly used for text box inputs
         data.forEach((row) => {
           const name = row.decoration_name;
           const input = document.querySelector<HTMLInputElement>(
@@ -109,24 +91,18 @@ function importData(file: File, callback: (data: any) => void) {
                 totalQuantity += Number(value);
               }
             });
-            console.log(`Setting input value for ${name}:`, totalQuantity); // Debugging log
             input.value = totalQuantity.toString();
-          } else {
-            console.warn(`Input element not found for decoration: ${name}`); // Debugging log
           }
         });
-
         callback(data);
       }
     } catch (error) {
-      console.error("Failed to import data:", error); // Debugging log
       alert("Failed to import data: " + error);
     }
   };
   reader.readAsText(file);
 }
 
-// Fixed the regular expression by escaping parentheses and removed the unused variable
 function gatherExportData() {
   const decorationQuantities = Array.from(
     document.querySelectorAll<HTMLInputElement>(".decoration-input-group input")
@@ -152,22 +128,16 @@ function gatherExportData() {
     });
   }
 
-  // If results are empty, populate with optimized data
   if (Object.keys(results).length === 0) {
     const optimizationResults = optimizeDecorations(
       Array.from(document.querySelectorAll<HTMLInputElement>(".town-checkbox:checked")).map((checkbox) => checkbox.value),
       decorationQuantities,
       document.querySelector<HTMLInputElement>("#valhalla-only")?.checked || false
     );
-
     Object.entries(optimizationResults).forEach(([town, data]) => {
       results[town] = { decorations: data.decorations || [] };
     });
   }
-
-  console.log("Gathered decoration quantities:", decorationQuantities);
-  console.log("Gathered results:", results);
-
   return { decorationQuantities, results };
 }
 
@@ -233,8 +203,8 @@ export function setupInputForm() {
 
   townCheckboxes.forEach((checkbox) => {
     const townName = checkbox.value;
-    checkbox.id = `town-${sanitizeId(townName)}`; // Add id attribute
-    checkbox.name = `town-${sanitizeId(townName)}`; // Add name attribute
+    checkbox.id = `town-${sanitizeId(townName)}`;
+    checkbox.name = `town-${sanitizeId(townName)}`;
   });
 
   const form = document.querySelector<HTMLFormElement>("#decoration-form")!;
@@ -257,7 +227,6 @@ export function setupInputForm() {
   resetValuesTopButton.addEventListener("click", resetAllDecorationInputs);
   resetValuesBottomButton.addEventListener("click", resetAllDecorationInputs);
 
-  // Added a radio button group for selecting optimization method
   const optimizationMethodContainer = document.createElement("div");
   optimizationMethodContainer.id = "optimization-method-container";
   optimizationMethodContainer.innerHTML = `
@@ -303,9 +272,6 @@ export function setupInputForm() {
         valhallaOnlyCheckbox.checked
       );
     }
-
-    // Add debugging logs to trace data output after the optimization
-    console.log("Optimization results:", JSON.stringify(results, null, 2));
 
     if (towns.includes("evergarden")) {
       const evergardenDecorations = results["evergarden"].decorations.filter(
@@ -375,7 +341,7 @@ export function setupInputForm() {
         townResult.red === 0 &&
         (!townResult.decorations || townResult.decorations.length === 0))
       ) {
-        return; // Skip towns with no decorations used
+        return;
       }
 
       const townSection = document.createElement("div");
@@ -512,22 +478,6 @@ export function setupInputForm() {
 
   document.getElementById("export-csv")?.addEventListener("click", () => {
     const { decorationQuantities, results } = gatherExportData();
-
-    // Updated the rows construction to populate the "Unused" column with appropriate values
-    const rows = Object.entries(decorationQuantities).map(([name]) => {
-      const category = decorations.find((d) => d.name === name)?.category || "";
-      const townQuantities = Object.keys(results).map((town) => {
-        const townDecorations = results[town]?.decorations || [];
-        const decoration = townDecorations.find((d: any) => d.name === name);
-        return decoration ? decoration.quantity : "";
-      });
-      const unused = results[name]?.unused || ""; // Populate the "Unused" column
-      return [name, category, ...townQuantities, unused];
-    });
-
-    // Add debugging logs to trace the rows being processed for CSV export
-    console.log("Rows for CSV export:", rows);
-
     exportToCsv(decorationQuantities, results, "data.csv");
   });
 
@@ -538,7 +488,6 @@ export function setupInputForm() {
       const file = fileInput.files?.[0];
       if (file) {
         importData(file, (data) => {
-          // Populate decoration quantities from imported CSV data
           data.forEach((row: any) => {
             const name = row.decoration_name;
             const input = document.querySelector<HTMLInputElement>(
@@ -558,21 +507,5 @@ export function setupInputForm() {
       }
     };
     fileInput.click();
-  });
-
-  // Fix implicit 'any' types in other parts of the file
-  document.querySelectorAll<HTMLInputElement>(".decoration-input-group input").forEach((input) => {
-    input.addEventListener("change", (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      console.log(`Input changed: ${target.name} = ${target.value}`);
-    });
-  });
-
-  const townResults = document.querySelectorAll<HTMLLIElement>(".town-result li");
-  townResults.forEach((li: HTMLLIElement) => {
-    const match = li.textContent?.match(/^\d+x (.+) \(/);
-    if (match) {
-      console.log(`Matched decoration: ${match[1]}`);
-    }
   });
 }
