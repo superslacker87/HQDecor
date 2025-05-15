@@ -31,7 +31,10 @@ function loadUserData() {
 
 function exportToCsv(
   decorationQuantities: Record<string, number>,
-  results: Record<string, { decorations: { name: string; quantity: number }[] }>,
+  results: Record<
+    string,
+    { decorations: { name: string; quantity: number }[] }
+  >,
   filename: string
 ) {
   const headers = [
@@ -41,18 +44,30 @@ function exportToCsv(
     ...Object.keys(results),
   ];
 
-  const rows = Object.entries(decorationQuantities).map(([name, quantity]: [string, number]) => {
-    const category = decorations.find((d: { name: string; category: string }) => d.name === name)?.category || "";
-    const townQuantities = Object.keys(results).map((town: string) => {
-      const townDecorations = results[town]?.decorations || [];
-      const decoration = townDecorations.find((d: { name: string; quantity: number }) => d.name === name);
-      return decoration ? decoration.quantity : 0;
-    });
-    const unused = quantity - townQuantities.reduce((sum: number, qty: number) => sum + qty, 0);
-    return [name, category, unused, ...townQuantities];
-  });
+  const rows = Object.entries(decorationQuantities).map(
+    ([name, quantity]: [string, number]) => {
+      const category =
+        decorations.find(
+          (d: { name: string; category: string }) => d.name === name
+        )?.category || "";
+      const townQuantities = Object.keys(results).map((town: string) => {
+        const townDecorations = results[town]?.decorations || [];
+        const decoration = townDecorations.find(
+          (d: { name: string; quantity: number }) => d.name === name
+        );
+        return decoration ? decoration.quantity : 0;
+      });
+      const unused =
+        quantity -
+        townQuantities.reduce((sum: number, qty: number) => sum + qty, 0);
+      return [name, category, unused, ...townQuantities];
+    }
+  );
 
-  const csvContent = [headers.join(","), ...rows.map((row: (string | number)[]) => row.join(","))].join("\n");
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row: (string | number)[]) => row.join(",")),
+  ].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -115,13 +130,20 @@ function gatherExportData() {
   const results: Record<string, any> = {};
 
   if (resultsDiv) {
-    const townSections = resultsDiv.querySelectorAll<HTMLDivElement>(".town-result");
+    const townSections =
+      resultsDiv.querySelectorAll<HTMLDivElement>(".town-result");
     townSections.forEach((section) => {
-      const townName = section.querySelector("h3")?.textContent?.replace("Results for ", "") || "";
-      const decorations = Array.from(section.querySelectorAll<HTMLLIElement>("li"))
+      const townName =
+        section.querySelector("h3")?.textContent?.replace("Results for ", "") ||
+        "";
+      const decorations = Array.from(
+        section.querySelectorAll<HTMLLIElement>("li")
+      )
         .map((li) => {
           const match = li.textContent?.match(/^(\d+)x (.+) \(/);
-          return match ? { name: match[2], quantity: parseInt(match[1], 10) } : null;
+          return match
+            ? { name: match[2], quantity: parseInt(match[1], 10) }
+            : null;
         })
         .filter(Boolean);
       results[townName] = { decorations };
@@ -130,9 +152,12 @@ function gatherExportData() {
 
   if (Object.keys(results).length === 0) {
     const optimizationResults = optimizeDecorations(
-      Array.from(document.querySelectorAll<HTMLInputElement>(".town-checkbox:checked")).map((checkbox) => checkbox.value),
+      Array.from(
+        document.querySelectorAll<HTMLInputElement>(".town-checkbox:checked")
+      ).map((checkbox) => checkbox.value),
       decorationQuantities,
-      document.querySelector<HTMLInputElement>("#valhalla-only")?.checked || false
+      document.querySelector<HTMLInputElement>("#valhalla-only")?.checked ||
+        false
     );
     Object.entries(optimizationResults).forEach(([town, data]) => {
       results[town] = { decorations: data.decorations || [] };
@@ -212,8 +237,9 @@ export function setupInputForm() {
     document.querySelector<HTMLInputElement>("#valhalla-only")!;
   const resetValuesTopButton =
     document.querySelector<HTMLButtonElement>("#reset-values-top")!;
-  const resetValuesBottomButton =
-    document.querySelector<HTMLButtonElement>("#reset-values-bottom")!;
+  const resetValuesBottomButton = document.querySelector<HTMLButtonElement>(
+    "#reset-values-bottom"
+  )!;
 
   function resetAllDecorationInputs() {
     const decorationInputs = document.querySelectorAll<HTMLInputElement>(
@@ -234,7 +260,10 @@ export function setupInputForm() {
     <label><input type="radio" name="optimization-method" value="maximum" checked> Maximum</label>
     <label><input type="radio" name="optimization-method" value="balanced"> Balanced</label>
   `;
-  form.insertBefore(optimizationMethodContainer, form.querySelector("#options-container"));
+  form.insertBefore(
+    optimizationMethodContainer,
+    form.querySelector("#options-container")
+  );
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -254,9 +283,10 @@ export function setupInputForm() {
 
     saveUserData(towns, decorationQuantities);
 
-    const selectedMethod = document.querySelector<HTMLInputElement>(
-      "input[name='optimization-method']:checked"
-    )?.value || "maximum";
+    const selectedMethod =
+      document.querySelector<HTMLInputElement>(
+        "input[name='optimization-method']:checked"
+      )?.value || "maximum";
 
     let results;
     if (selectedMethod === "balanced") {
@@ -294,7 +324,7 @@ export function setupInputForm() {
           const decorationData = decorations.find(
             (d: { name: string; green: number }) => d.name === decoration.name
           );
-          return sum + ((decorationData?.green || 0) * decoration.quantity);
+          return sum + (decorationData?.green || 0) * decoration.quantity;
         },
         0
       );
@@ -303,7 +333,7 @@ export function setupInputForm() {
           const decorationData = decorations.find(
             (d: { name: string; blue: number }) => d.name === decoration.name
           );
-          return sum + ((decorationData?.blue || 0) * decoration.quantity);
+          return sum + (decorationData?.blue || 0) * decoration.quantity;
         },
         0
       );
@@ -312,7 +342,7 @@ export function setupInputForm() {
           const decorationData = decorations.find(
             (d: { name: string; red: number }) => d.name === decoration.name
           );
-          return sum + ((decorationData?.red || 0) * decoration.quantity);
+          return sum + (decorationData?.red || 0) * decoration.quantity;
         },
         0
       );
@@ -335,11 +365,12 @@ export function setupInputForm() {
     towns.forEach((town) => {
       const townResult = results[town];
 
-      if (!townResult ||
+      if (
+        !townResult ||
         (townResult.green === 0 &&
-        townResult.blue === 0 &&
-        townResult.red === 0 &&
-        (!townResult.decorations || townResult.decorations.length === 0))
+          townResult.blue === 0 &&
+          townResult.red === 0 &&
+          (!townResult.decorations || townResult.decorations.length === 0))
       ) {
         return;
       }
@@ -362,12 +393,14 @@ export function setupInputForm() {
       const decorationList = document.createElement("ul");
       const decorationTotals: Record<string, number> = {};
 
-      townResult.decorations.forEach((decoration: { name: string; quantity: number }) => {
-        if (!decorationTotals[decoration.name]) {
-          decorationTotals[decoration.name] = 0;
+      townResult.decorations.forEach(
+        (decoration: { name: string; quantity: number }) => {
+          if (!decorationTotals[decoration.name]) {
+            decorationTotals[decoration.name] = 0;
+          }
+          decorationTotals[decoration.name] += decoration.quantity;
         }
-        decorationTotals[decoration.name] += decoration.quantity;
-      });
+      );
 
       Object.entries(decorationTotals)
         .sort(([nameA], [nameB]) => {
@@ -389,14 +422,34 @@ export function setupInputForm() {
       resultsDiv.appendChild(townSection);
     });
 
-    const unusedDecorations = decorations.map((decoration: { name: string; green: number; blue: number; red: number }) => {
-      const usedQuantity = Object.values(results).flatMap((town: { decorations: { name: string; quantity: number }[] }) =>
-        town.decorations.filter((d: { name: string }) => d.name === decoration.name)
-      ).reduce((sum: number, d: { quantity: number }) => sum + d.quantity, 0);
-      const totalQuantity = decorationQuantities[decoration.name] || 0;
-      const unusedQuantity = totalQuantity - usedQuantity;
-      return { ...decoration, unusedQuantity };
-    }).filter((decoration: { unusedQuantity: number }) => decoration.unusedQuantity > 0);
+    const unusedDecorations = decorations
+      .map(
+        (decoration: {
+          name: string;
+          green: number;
+          blue: number;
+          red: number;
+        }) => {
+          const usedQuantity = Object.values(results)
+            .flatMap(
+              (town: { decorations: { name: string; quantity: number }[] }) =>
+                town.decorations.filter(
+                  (d: { name: string }) => d.name === decoration.name
+                )
+            )
+            .reduce(
+              (sum: number, d: { quantity: number }) => sum + d.quantity,
+              0
+            );
+          const totalQuantity = decorationQuantities[decoration.name] || 0;
+          const unusedQuantity = totalQuantity - usedQuantity;
+          return { ...decoration, unusedQuantity };
+        }
+      )
+      .filter(
+        (decoration: { unusedQuantity: number }) =>
+          decoration.unusedQuantity > 0
+      );
 
     if (unusedDecorations.length > 0) {
       const unusedSection = document.createElement("div");
@@ -407,11 +460,19 @@ export function setupInputForm() {
       unusedSection.appendChild(unusedHeader);
 
       const unusedList = document.createElement("ul");
-      unusedDecorations.forEach(({ name, green, blue, red, unusedQuantity }) => {
-        const listItem = document.createElement("li");
-        listItem.innerHTML = `${unusedQuantity}x ${name} (<span style='color: green;'>&#x1F49A;</span> ${green * unusedQuantity}, <span style='color: blue;'>&#x1F499;</span> ${blue * unusedQuantity}, <span style='color: red;'>&#x1F497;</span> ${red * unusedQuantity})`;
-        unusedList.appendChild(listItem);
-      });
+      unusedDecorations.forEach(
+        ({ name, green, blue, red, unusedQuantity }) => {
+          const listItem = document.createElement("li");
+          listItem.innerHTML = `${unusedQuantity}x ${name} (<span style='color: green;'>&#x1F49A;</span> ${
+            green * unusedQuantity
+          }, <span style='color: blue;'>&#x1F499;</span> ${
+            blue * unusedQuantity
+          }, <span style='color: red;'>&#x1F497;</span> ${
+            red * unusedQuantity
+          })`;
+          unusedList.appendChild(listItem);
+        }
+      );
 
       unusedSection.appendChild(unusedList);
       resultsDiv.appendChild(unusedSection);
@@ -478,11 +539,13 @@ export function setupInputForm() {
 
   document.getElementById("export-csv")?.addEventListener("click", () => {
     const { decorationQuantities, results } = gatherExportData();
-    exportToCsv(decorationQuantities, results, "data.csv");
+    exportToCsv(decorationQuantities, results, "HomeQuest-Decor-Export.csv");
   });
 
   document.getElementById("import-csv")?.addEventListener("click", () => {
-    const fileInput = document.getElementById("import-file") as HTMLInputElement;
+    const fileInput = document.getElementById(
+      "import-file"
+    ) as HTMLInputElement;
     fileInput.accept = ".csv";
     fileInput.onchange = () => {
       const file = fileInput.files?.[0];
