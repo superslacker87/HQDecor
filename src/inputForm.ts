@@ -29,6 +29,208 @@ function loadUserData() {
   return null;
 }
 
+// Function to export data in JSON format
+function exportToJson(data: any, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Function to export data in CSV format
+function exportToCsv(data: any[], filename: string) {
+  const headers = [
+    "Decoration Name",
+    "Category",
+    "Quantity",
+    "Town One",
+    "Town Two",
+    "Town Three",
+    "Town Four",
+    "Evergarden",
+    "Northern Town One",
+    "Northern Town Two",
+    "Northern Town Three",
+    "Unused",
+  ];
+
+  // Directly join rows as they are already arrays
+  const csvRows = data.map((row) => row.join(","));
+
+  const csvContent = [headers.join(","), ...csvRows].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Function to export a blank template in CSV format
+function exportBlankTemplate(filename: string) {
+  const headers = [
+    "Decoration",
+    "Category",
+    "Quantity",
+    "Town One",
+    "Town Two",
+    "Town Three",
+    "Town Four",
+    "Evergarden",
+    "Northern Town One",
+    "Northern Town Two",
+    "Northern Town Three",
+    "Unused",
+  ];
+
+  const rows = [
+    ["Greenery Variant A", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
+    ["Greenery Variant B", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
+    ["The Globe", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
+    ["Heroic Horse", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
+    ["Tree of Life", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
+    ["Freya's Fortune", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
+    ["Golden Freya", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
+    ["Tree of Knowledge", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
+    ["Theatre", "Oracle", "", "", "", "", "", "", "", "", "", ""],
+    ["Golden Theatre", "Oracle", "", "", "", "", "", "", "", "", "", ""],
+    ["Wizard's Staff", "Mercury", "", "", "", "", "", "", "", "", "", ""],
+    ["Park", "Central Park", "", "", "", "", "", "", "", "", "", ""],
+    ["Forest", "Central Park", "", "", "", "", "", "", "", "", "", ""],
+    ["Observatory", "Central Park", "", "", "", "", "", "", "", "", "", ""],
+    ["The Deer", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
+    ["Elf House", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
+    ["Snowflake", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
+    ["Cozy Cabin", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
+    ["Rocks", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
+    ["Ridge", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
+    ["Lake", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
+    ["Meadow", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
+    ["Gorgon", "Medusa", "", "", "", "", "", "", "", "", "", ""],
+    ["Golden Gorgon", "Medusa", "", "", "", "", "", "", "", "", "", ""],
+  ];
+
+  const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Function to export a blank template in JSON format
+function exportBlankJson(filename: string) {
+  const blankData = {
+    decorationQuantities: {
+      "Greenery Variant A": 0,
+      "Greenery Variant B": 0,
+      "The Globe": 0,
+      "Heroic Horse": 0,
+      "Tree of Life": 0,
+      "Freya's Fortune": 0,
+      "Golden Freya": 0,
+      "Tree of Knowledge": 0,
+      "Theatre": 0,
+      "Golden Theatre": 0,
+      "Wizard's Staff": 0,
+      "Park": 0,
+      "Forest": 0,
+      "Observatory": 0,
+      "The Deer": 0,
+      "Elf House": 0,
+      "Snowflake": 0,
+      "Cozy Cabin": 0,
+      "Rocks": 0,
+      "Ridge": 0,
+      "Lake": 0,
+      "Meadow": 0,
+      "Gorgon": 0,
+      "Golden Gorgon": 0
+    }
+  };
+
+  const blob = new Blob([JSON.stringify(blankData, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Function to import data from JSON or CSV
+function importData(file: File, callback: (data: any) => void) {
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const content = event.target?.result as string;
+      if (file.type === "application/json") {
+        const data = JSON.parse(content);
+        callback(data);
+      } else if (file.type === "text/csv") {
+        const rows = content.split(/\r?\n/).filter(Boolean);
+        const headers = rows.shift()?.split(",") || [];
+        const data = rows.map((row) => {
+          const values = row.split(",");
+          return headers.reduce((acc, header, index) => {
+            acc[header.toLowerCase().replace(/ /g, "_")] = values[index];
+            return acc;
+          }, {} as Record<string, string>);
+        });
+        callback(data);
+      }
+    } catch (error) {
+      alert("Failed to import data: " + error);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Function to dynamically gather data for export
+function gatherExportData() {
+  // Gather decoration quantities from input fields
+  const decorationQuantities = Array.from(
+    document.querySelectorAll<HTMLInputElement>(".decoration-input-group input")
+  ).reduce((acc, input) => {
+    acc[input.name] = parseInt(input.value, 10) || 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Gather optimization results (if available)
+  const resultsDiv = document.querySelector<HTMLDivElement>("#results");
+  const results: Record<string, any> = {};
+  if (resultsDiv) {
+    const townSections = resultsDiv.querySelectorAll<HTMLDivElement>(".town-result");
+    townSections.forEach((section) => {
+      const townName = section.querySelector("h3")?.textContent?.replace("Results for ", "") || "";
+      const decorations = Array.from(section.querySelectorAll<HTMLLIElement>("li"))
+        .map((li) => {
+          const match = li.textContent?.match(/^(\d+)x (.+) \(/);
+          return match ? { name: match[2], quantity: parseInt(match[1], 10) } : null;
+        })
+        .filter(Boolean);
+      results[townName] = { decorations };
+    });
+  }
+
+  return { decorationQuantities, results };
+}
+
 export function setupInputForm() {
   const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -119,10 +321,7 @@ export function setupInputForm() {
     event.preventDefault();
 
     const towns = Array.from(townCheckboxes)
-      .filter((checkbox) => {
-        console.log(`Checkbox value: ${checkbox.value}, Checked: ${checkbox.checked}`); // Debugging log
-        return checkbox.checked;
-      })
+      .filter((checkbox) => checkbox.checked)
       .map((checkbox) => checkbox.value);
 
     const decorationQuantities = Array.from(
@@ -142,32 +341,21 @@ export function setupInputForm() {
       valhallaOnlyCheckbox.checked
     );
 
-    console.log("Optimization started");
-    console.log("Selected towns:", towns);
-
     if (towns.includes("evergarden")) {
-      console.log("Evergarden is included in the selected towns.");
-
-      // Filter decorations for Evergarden to only include Valhalla items
       const evergardenDecorations = results["evergarden"].decorations.filter(
         (decoration) => {
           const isValhalla = decorations.find(
             (d) => d.name === decoration.name && d.category === "Valhalla"
           );
           if (!isValhalla) {
-            console.log(
-              `Excluding non-Valhalla decoration from Evergarden: ${decoration.name}`
-            );
             decorationQuantities[decoration.name] += decoration.quantity;
           }
           return isValhalla;
         }
       );
 
-      // Update Evergarden results with valid decorations
       results["evergarden"].decorations = evergardenDecorations;
 
-      // Recalculate heart values for Evergarden
       results["evergarden"].green = evergardenDecorations.reduce(
         (sum, decoration) => {
           const decorationData = decorations.find((d) => d.name === decoration.name);
@@ -189,12 +377,6 @@ export function setupInputForm() {
         },
         0
       );
-
-      console.log(
-        `Evergarden totals - Green: ${results["evergarden"].green}, Blue: ${results["evergarden"].blue}, Red: ${results["evergarden"].red}`
-      );
-    } else {
-      console.log("Evergarden is not included in the selected towns.");
     }
 
     const resultsDiv = document.querySelector<HTMLDivElement>("#results")!;
@@ -268,13 +450,12 @@ export function setupInputForm() {
       resultsDiv.appendChild(townSection);
     });
 
-    // Check for unused decorations
     const unusedDecorations = decorations.map((decoration) => {
       const usedQuantity = Object.values(results).flatMap((town) =>
         town.decorations.filter((d) => d.name === decoration.name)
       ).reduce((sum, d) => sum + d.quantity, 0);
       const totalQuantity = decorationQuantities[decoration.name] || 0;
-      const unusedQuantity = totalQuantity - usedQuantity; // Corrected subtraction logic
+      const unusedQuantity = totalQuantity - usedQuantity;
       return { ...decoration, unusedQuantity };
     }).filter((decoration) => decoration.unusedQuantity > 0);
 
@@ -346,4 +527,98 @@ export function setupInputForm() {
       }
     });
   }
+
+  const importExportSection = document.createElement("div");
+  importExportSection.innerHTML = `
+    <h2>Import/Export Data</h2>
+    <button id="export-json">Export JSON</button>
+    <button id="export-csv">Export CSV</button>
+    <button id="import-json">Import JSON</button>
+    <button id="import-csv">Import CSV</button>
+    <button id="export-template">Export Blank Template</button>
+    <input type="file" id="import-file" style="display:none" />
+  `;
+  app.appendChild(importExportSection);
+
+  const exportJsonTemplateButton = document.createElement("button");
+  exportJsonTemplateButton.id = "export-json-template";
+  exportJsonTemplateButton.textContent = "Export Blank JSON Template";
+  importExportSection.appendChild(exportJsonTemplateButton);
+
+  document.getElementById("export-json")?.addEventListener("click", () => {
+    const data = gatherExportData();
+    exportToJson(data, "data.json");
+  });
+
+  document.getElementById("export-csv")?.addEventListener("click", () => {
+    const { decorationQuantities, results } = gatherExportData();
+
+    const rows = Object.entries(decorationQuantities).map(([name, quantity]) => {
+      const category = decorations.find((d) => d.name === name)?.category || "";
+      const townQuantities = Object.keys(results).map((town) => {
+        const townDecorations = results[town]?.decorations || [];
+        const decoration = townDecorations.find((d: any) => d.name === name);
+        return decoration ? decoration.quantity : "";
+      });
+      return [name, category, quantity, ...townQuantities, ""];
+    });
+
+    exportToCsv(rows, "data.csv");
+  });
+
+  document.getElementById("import-json")?.addEventListener("click", () => {
+    const fileInput = document.getElementById("import-file") as HTMLInputElement;
+    fileInput.accept = ".json";
+    fileInput.onchange = () => {
+      const file = fileInput.files?.[0];
+      if (file) {
+        importData(file, (data) => {
+          // Populate decoration quantities from imported JSON data
+          if (data.decorationQuantities) {
+            Object.entries(data.decorationQuantities).forEach(([name, quantity]) => {
+              const input = document.querySelector<HTMLInputElement>(
+                `#decoration-${sanitizeId(name)}`
+              );
+              if (input) {
+                input.value = (quantity as number).toString();
+              }
+            });
+          }
+        });
+      }
+    };
+    fileInput.click();
+  });
+
+  document.getElementById("import-csv")?.addEventListener("click", () => {
+    const fileInput = document.getElementById("import-file") as HTMLInputElement;
+    fileInput.accept = ".csv";
+    fileInput.onchange = () => {
+      const file = fileInput.files?.[0];
+      if (file) {
+        importData(file, (data) => {
+          // Populate decoration quantities from imported CSV data
+          data.forEach((row: any) => {
+            const name = row.decoration_name;
+            const quantity = parseInt(row.quantity as string, 10) || 0;
+            const input = document.querySelector<HTMLInputElement>(
+              `#decoration-${sanitizeId(name)}`
+            );
+            if (input) {
+              input.value = quantity.toString();
+            }
+          });
+        });
+      }
+    };
+    fileInput.click();
+  });
+
+  document.getElementById("export-template")?.addEventListener("click", () => {
+    exportBlankTemplate("blank-template.csv");
+  });
+
+  document.getElementById("export-json-template")?.addEventListener("click", () => {
+    exportBlankJson("blank-template.json");
+  });
 }
