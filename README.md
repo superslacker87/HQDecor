@@ -35,11 +35,11 @@ The Home Quest Decor Helper is a tool designed to optimize decoration placement 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/home-quest-decor-helper.git
+   git clone https://github.com/superslacker87/HQDecor.git
    ```
 2. Navigate to the project directory:
    ```bash
-   cd home-quest-decor-helper
+   cd HQDecor
    ```
 3. Install dependencies:
    ```bash
