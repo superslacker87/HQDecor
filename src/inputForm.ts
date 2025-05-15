@@ -29,25 +29,12 @@ function loadUserData() {
   return null;
 }
 
-// Function to export data in JSON format
-function exportToJson(data: any, filename: string) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// Function to export data in CSV format
-function exportToCsv(data: any[], filename: string) {
+// Updated the exportToCsv function to accept decorationQuantities and results as arguments
+function exportToCsv(decorationQuantities: Record<string, number>, results: Record<string, any>, filename: string) {
   const headers = [
     "Decoration Name",
     "Category",
-    "Quantity",
+    "Unused",
     "Town One",
     "Town Two",
     "Town Three",
@@ -56,68 +43,29 @@ function exportToCsv(data: any[], filename: string) {
     "Northern Town One",
     "Northern Town Two",
     "Northern Town Three",
-    "Unused",
   ];
 
-  // Directly join rows as they are already arrays
-  const csvRows = data.map((row) => row.join(","));
+  const rows = Object.entries(decorationQuantities).map(([name]) => {
+    const category = decorations.find((d) => d.name === name)?.category || "";
+    const townQuantities = [
+      results["Town 1"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+      results["Town 2"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+      results["Town 3"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+      results["Town 4"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+      results["Evergarden"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+      results["Northern Town One"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+      results["Northern Town Two"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+      results["Northern Town Three"]?.decorations.find((d: any) => d.name === name)?.quantity || 0,
+    ];
+    const unused = decorationQuantities[name] - townQuantities.reduce((sum, qty) => sum + qty, 0);
 
-  const csvContent = [headers.join(","), ...csvRows].join("\n");
+    // Debugging log to verify town quantities and unused values
+    console.log(`Decoration: ${name}, Town Quantities: ${townQuantities}, Unused: ${unused}`);
 
-  const blob = new Blob([csvContent], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
+    return [name, category, unused, ...townQuantities];
+  });
 
-// Function to export a blank template in CSV format
-function exportBlankTemplate(filename: string) {
-  const headers = [
-    "Decoration",
-    "Category",
-    "Quantity",
-    "Town One",
-    "Town Two",
-    "Town Three",
-    "Town Four",
-    "Evergarden",
-    "Northern Town One",
-    "Northern Town Two",
-    "Northern Town Three",
-    "Unused",
-  ];
-
-  const rows = [
-    ["Greenery Variant A", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
-    ["Greenery Variant B", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
-    ["The Globe", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
-    ["Heroic Horse", "Town Essentials", "", "", "", "", "", "", "", "", "", ""],
-    ["Tree of Life", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
-    ["Freya's Fortune", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
-    ["Golden Freya", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
-    ["Tree of Knowledge", "Valhalla", "", "", "", "", "", "", "", "", "", ""],
-    ["Theatre", "Oracle", "", "", "", "", "", "", "", "", "", ""],
-    ["Golden Theatre", "Oracle", "", "", "", "", "", "", "", "", "", ""],
-    ["Wizard's Staff", "Mercury", "", "", "", "", "", "", "", "", "", ""],
-    ["Park", "Central Park", "", "", "", "", "", "", "", "", "", ""],
-    ["Forest", "Central Park", "", "", "", "", "", "", "", "", "", ""],
-    ["Observatory", "Central Park", "", "", "", "", "", "", "", "", "", ""],
-    ["The Deer", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
-    ["Elf House", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
-    ["Snowflake", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
-    ["Cozy Cabin", "Reindeer Fest", "", "", "", "", "", "", "", "", "", ""],
-    ["Rocks", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
-    ["Ridge", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
-    ["Lake", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
-    ["Meadow", "Nature Reserve", "", "", "", "", "", "", "", "", "", ""],
-    ["Gorgon", "Medusa", "", "", "", "", "", "", "", "", "", ""],
-    ["Golden Gorgon", "Medusa", "", "", "", "", "", "", "", "", "", ""],
-  ];
+  console.log("Updated rows for CSV export with corrected headers and rows:", rows);
 
   const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv" });
@@ -131,60 +79,21 @@ function exportBlankTemplate(filename: string) {
   URL.revokeObjectURL(url);
 }
 
-// Function to export a blank template in JSON format
-function exportBlankJson(filename: string) {
-  const blankData = {
-    decorationQuantities: {
-      "Greenery Variant A": 0,
-      "Greenery Variant B": 0,
-      "The Globe": 0,
-      "Heroic Horse": 0,
-      "Tree of Life": 0,
-      "Freya's Fortune": 0,
-      "Golden Freya": 0,
-      "Tree of Knowledge": 0,
-      "Theatre": 0,
-      "Golden Theatre": 0,
-      "Wizard's Staff": 0,
-      "Park": 0,
-      "Forest": 0,
-      "Observatory": 0,
-      "The Deer": 0,
-      "Elf House": 0,
-      "Snowflake": 0,
-      "Cozy Cabin": 0,
-      "Rocks": 0,
-      "Ridge": 0,
-      "Lake": 0,
-      "Meadow": 0,
-      "Gorgon": 0,
-      "Golden Gorgon": 0
-    }
-  };
-
-  const blob = new Blob([JSON.stringify(blankData, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// Function to import data from JSON or CSV
+// Added debugging logs to trace issues with the "Unused" column during import
 function importData(file: File, callback: (data: any) => void) {
   const reader = new FileReader();
   reader.onload = (event) => {
     try {
       const content = event.target?.result as string;
-      if (file.type === "application/json") {
-        const data = JSON.parse(content);
-        callback(data);
-      } else if (file.type === "text/csv") {
+      console.log("File content loaded:", content); // Debugging log
+
+      if (file.type === "text/csv") {
         const rows = content.split(/\r?\n/).filter(Boolean);
+        console.log("CSV rows:", rows); // Debugging log
+
         const headers = rows.shift()?.split(",") || [];
+        console.log("CSV headers:", headers); // Debugging log
+
         const data = rows.map((row) => {
           const values = row.split(",");
           return headers.reduce((acc, header, index) => {
@@ -192,18 +101,41 @@ function importData(file: File, callback: (data: any) => void) {
             return acc;
           }, {} as Record<string, string>);
         });
+
+        console.log("Mapped CSV data:", data); // Debugging log
+
+        // Ensure the "Unused" column is correctly used for text box inputs
+        data.forEach((row) => {
+          const name = row.decoration_name;
+          const input = document.querySelector<HTMLInputElement>(
+            `#decoration-${sanitizeId(name)}`
+          );
+          if (input) {
+            let totalQuantity = 0;
+            Object.values(row).forEach((value) => {
+              if (!isNaN(Number(value))) {
+                totalQuantity += Number(value);
+              }
+            });
+            console.log(`Setting input value for ${name}:`, totalQuantity); // Debugging log
+            input.value = totalQuantity.toString();
+          } else {
+            console.warn(`Input element not found for decoration: ${name}`); // Debugging log
+          }
+        });
+
         callback(data);
       }
     } catch (error) {
+      console.error("Failed to import data:", error); // Debugging log
       alert("Failed to import data: " + error);
     }
   };
   reader.readAsText(file);
 }
 
-// Function to dynamically gather data for export
+// Fixed the regular expression by escaping parentheses and removed the unused variable
 function gatherExportData() {
-  // Gather decoration quantities from input fields
   const decorationQuantities = Array.from(
     document.querySelectorAll<HTMLInputElement>(".decoration-input-group input")
   ).reduce((acc, input) => {
@@ -211,9 +143,9 @@ function gatherExportData() {
     return acc;
   }, {} as Record<string, number>);
 
-  // Gather optimization results (if available)
   const resultsDiv = document.querySelector<HTMLDivElement>("#results");
   const results: Record<string, any> = {};
+
   if (resultsDiv) {
     const townSections = resultsDiv.querySelectorAll<HTMLDivElement>(".town-result");
     townSections.forEach((section) => {
@@ -227,6 +159,22 @@ function gatherExportData() {
       results[townName] = { decorations };
     });
   }
+
+  // If results are empty, populate with optimized data
+  if (Object.keys(results).length === 0) {
+    const optimizationResults = optimizeDecorations(
+      Array.from(document.querySelectorAll<HTMLInputElement>(".town-checkbox:checked")).map((checkbox) => checkbox.value),
+      decorationQuantities,
+      document.querySelector<HTMLInputElement>("#valhalla-only")?.checked || false
+    );
+
+    Object.entries(optimizationResults).forEach(([town, data]) => {
+      results[town] = { decorations: data.decorations || [] };
+    });
+  }
+
+  console.log("Gathered decoration quantities:", decorationQuantities);
+  console.log("Gathered results:", results);
 
   return { decorationQuantities, results };
 }
@@ -340,6 +288,9 @@ export function setupInputForm() {
       decorationQuantities,
       valhallaOnlyCheckbox.checked
     );
+
+    // Add debugging logs to trace data output after the optimization
+    console.log("Optimization results:", JSON.stringify(results, null, 2));
 
     if (towns.includes("evergarden")) {
       const evergardenDecorations = results["evergarden"].decorations.filter(
@@ -531,63 +482,31 @@ export function setupInputForm() {
   const importExportSection = document.createElement("div");
   importExportSection.innerHTML = `
     <h2>Import/Export Data</h2>
-    <button id="export-json">Export JSON</button>
     <button id="export-csv">Export CSV</button>
-    <button id="import-json">Import JSON</button>
     <button id="import-csv">Import CSV</button>
-    <button id="export-template">Export Blank Template</button>
     <input type="file" id="import-file" style="display:none" />
   `;
   app.appendChild(importExportSection);
 
-  const exportJsonTemplateButton = document.createElement("button");
-  exportJsonTemplateButton.id = "export-json-template";
-  exportJsonTemplateButton.textContent = "Export Blank JSON Template";
-  importExportSection.appendChild(exportJsonTemplateButton);
-
-  document.getElementById("export-json")?.addEventListener("click", () => {
-    const data = gatherExportData();
-    exportToJson(data, "data.json");
-  });
-
   document.getElementById("export-csv")?.addEventListener("click", () => {
     const { decorationQuantities, results } = gatherExportData();
 
-    const rows = Object.entries(decorationQuantities).map(([name, quantity]) => {
+    // Updated the rows construction to populate the "Unused" column with appropriate values
+    const rows = Object.entries(decorationQuantities).map(([name]) => {
       const category = decorations.find((d) => d.name === name)?.category || "";
       const townQuantities = Object.keys(results).map((town) => {
         const townDecorations = results[town]?.decorations || [];
         const decoration = townDecorations.find((d: any) => d.name === name);
         return decoration ? decoration.quantity : "";
       });
-      return [name, category, quantity, ...townQuantities, ""];
+      const unused = results[name]?.unused || ""; // Populate the "Unused" column
+      return [name, category, ...townQuantities, unused];
     });
 
-    exportToCsv(rows, "data.csv");
-  });
+    // Add debugging logs to trace the rows being processed for CSV export
+    console.log("Rows for CSV export:", rows);
 
-  document.getElementById("import-json")?.addEventListener("click", () => {
-    const fileInput = document.getElementById("import-file") as HTMLInputElement;
-    fileInput.accept = ".json";
-    fileInput.onchange = () => {
-      const file = fileInput.files?.[0];
-      if (file) {
-        importData(file, (data) => {
-          // Populate decoration quantities from imported JSON data
-          if (data.decorationQuantities) {
-            Object.entries(data.decorationQuantities).forEach(([name, quantity]) => {
-              const input = document.querySelector<HTMLInputElement>(
-                `#decoration-${sanitizeId(name)}`
-              );
-              if (input) {
-                input.value = (quantity as number).toString();
-              }
-            });
-          }
-        });
-      }
-    };
-    fileInput.click();
+    exportToCsv(decorationQuantities, results, "data.csv");
   });
 
   document.getElementById("import-csv")?.addEventListener("click", () => {
@@ -600,25 +519,22 @@ export function setupInputForm() {
           // Populate decoration quantities from imported CSV data
           data.forEach((row: any) => {
             const name = row.decoration_name;
-            const quantity = parseInt(row.quantity as string, 10) || 0;
             const input = document.querySelector<HTMLInputElement>(
               `#decoration-${sanitizeId(name)}`
             );
             if (input) {
-              input.value = quantity.toString();
+              let totalQuantity = 0;
+              Object.entries(row).forEach(([_, value]) => {
+                if (!isNaN(Number(value))) {
+                  totalQuantity += Number(value);
+                }
+              });
+              input.value = totalQuantity.toString();
             }
           });
         });
       }
     };
     fileInput.click();
-  });
-
-  document.getElementById("export-template")?.addEventListener("click", () => {
-    exportBlankTemplate("blank-template.csv");
-  });
-
-  document.getElementById("export-json-template")?.addEventListener("click", () => {
-    exportBlankJson("blank-template.json");
   });
 }

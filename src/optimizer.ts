@@ -23,6 +23,9 @@ export function optimizeDecorations(
   decorationQuantities: Record<string, number>,
   valhallaOnly: boolean
 ) {
+  // Log at the start of the function to confirm execution
+  console.log("optimizeDecorations called with:", { towns, decorationQuantities, valhallaOnly });
+
   const results: Record<string, TownResult> = {};
 
   // Initialize results for each town
@@ -64,6 +67,10 @@ export function optimizeDecorations(
       const applicableDecorations =
         town === "evergarden" ? valhallaDecorations : nonValhallaDecorations;
 
+      // Add debugging logs to trace decoration assignment
+      console.log(`Assigning decorations to town: ${town}`);
+      console.log(`Applicable decorations:`, applicableDecorations);
+
       // Sort decorations to optimize balance
       applicableDecorations.sort((a, b) => {
         const aBalance =
@@ -95,6 +102,8 @@ export function optimizeDecorations(
           townResult.red = newRed;
           townResult.decorations.push({ name: decoration.name, quantity: 1 });
           decoration.quantity--;
+
+          console.log(`Assigned ${decoration.name} to ${town}. Remaining quantity: ${decoration.quantity}`);
         }
       });
 

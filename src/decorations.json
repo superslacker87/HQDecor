@@ -56,27 +56,6 @@
     "red": 0
   },
   {
-    "name": "Theatre",
-    "category": "Oracle",
-    "green": 10,
-    "blue": 1,
-    "red": 1
-  },
-  {
-    "name": "Golden Theatre",
-    "category": "Oracle",
-    "green": 7,
-    "blue": 7,
-    "red": 7
-  },
-  {
-    "name": "Wizard's Staff",
-    "category": "Mercury",
-    "green": 0,
-    "blue": 15,
-    "red": 7
-  },
-  {
     "name": "Park",
     "category": "Central Park",
     "green": 4,
@@ -152,6 +131,27 @@
     "green": 3,
     "blue": 0,
     "red": 3
+  },
+  {
+    "name": "Theatre",
+    "category": "Oracle",
+    "green": 10,
+    "blue": 1,
+    "red": 1
+  },
+  {
+    "name": "Golden Theatre",
+    "category": "Oracle",
+    "green": 7,
+    "blue": 7,
+    "red": 7
+  },
+  {
+    "name": "Wizard's Staff",
+    "category": "Mercury",
+    "green": 0,
+    "blue": 15,
+    "red": 7
   },
   {
     "name": "Gorgon",
