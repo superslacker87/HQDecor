@@ -1,8 +1,13 @@
-// Import decorations data from JSON file
+// Home Quest Decor Helper - Optimization Logic
+// Contains functions for distributing decorations across towns using different strategies
+
 import decorationsData from "./decorations.json";
 import decorations from "./decorations.json";
 
-// Define types for decorations and town results
+// Type definitions for decorations and optimization results
+// Decoration: represents a single decoration's properties
+// TownResult: represents the result for a single town
+
 type Decoration = {
   name: string;
   category: string;
@@ -18,7 +23,7 @@ type TownResult = {
   decorations: { name: string; quantity: number }[];
 };
 
-// Main function to optimize decorations for towns
+// Maximum Optimization: Fills up one town at a time before moving to the next
 export function optimizeDecorations(
   towns: string[],
   decorationQuantities: Record<string, number>,
@@ -214,7 +219,10 @@ export function optimizeDecorations(
   return results;
 }
 
-// Function to distribute decorations across towns in a balanced way
+// Balanced Optimization: Distributes decorations as evenly as possible across all towns
+// - Respects max 1000 per color per town
+// - If valhallaOnly is true, only Valhalla decorations are used in Evergarden
+// - Otherwise, Valhalla decorations can be used in any town
 export function optimizeDecorationsBalanced(
   towns: string[],
   decorationQuantities: Record<string, number>,

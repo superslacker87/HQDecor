@@ -1,10 +1,15 @@
+// Home Quest Decor Helper - Input Form Logic
+// Handles UI setup, user input, optimization, and import/export for decorations
+
 import { optimizeDecorations, optimizeDecorationsBalanced } from "./optimizer";
 import decorations from "./decorations.json";
 
+// Utility: Sanitize a string for use as an HTML id
 function sanitizeId(name: string): string {
   return name.replace(/[^a-zA-Z0-9-_]/g, "-");
 }
 
+// Save user selections and decoration quantities to a cookie
 function saveUserData(
   towns: string[],
   decorationQuantities: Record<string, number>
@@ -15,6 +20,7 @@ function saveUserData(
   )}; path=/; max-age=31536000;`;
 }
 
+// Load user selections and decoration quantities from a cookie
 function loadUserData() {
   const cookies = document.cookie.split("; ");
   const userDataCookie = cookies.find((cookie) =>
@@ -29,6 +35,7 @@ function loadUserData() {
   return null;
 }
 
+// Export the current results and decoration quantities to a CSV file
 function exportToCsv(
   decorationQuantities: Record<string, number>,
   results: Record<
@@ -79,6 +86,7 @@ function exportToCsv(
   URL.revokeObjectURL(url);
 }
 
+// Import decoration data from a CSV file and update the UI
 function importData(file: File, callback: (data: any) => void) {
   const reader = new FileReader();
   reader.onload = (event) => {
@@ -118,6 +126,7 @@ function importData(file: File, callback: (data: any) => void) {
   reader.readAsText(file);
 }
 
+// Gather current UI data for export (quantities and results)
 function gatherExportData() {
   const decorationQuantities = Array.from(
     document.querySelectorAll<HTMLInputElement>(".decoration-input-group input")
@@ -166,9 +175,11 @@ function gatherExportData() {
   return { decorationQuantities, results };
 }
 
+// Main function to set up the input form and handle all UI logic
 export function setupInputForm() {
   const app = document.querySelector<HTMLDivElement>("#app")!;
 
+  // Render the main form UI
   app.innerHTML = `
   <header>
   <img id="header" src="hq_logo.webp" alt="Home Quest Logo">
@@ -210,10 +221,12 @@ export function setupInputForm() {
     <div id="results"></div>
   `;
 
+  // Remove any old paste-list textarea if present
   const pasteListTextarea =
     document.querySelector<HTMLTextAreaElement>("#paste-list");
   if (pasteListTextarea) pasteListTextarea.remove();
 
+  // Set up select all/none for towns
   const selectAllCheckbox =
     document.querySelector<HTMLInputElement>("#select-all-towns")!;
   const townCheckboxes =
@@ -226,12 +239,14 @@ export function setupInputForm() {
     });
   });
 
+  // Assign unique ids and names to town checkboxes
   townCheckboxes.forEach((checkbox) => {
     const townName = checkbox.value;
     checkbox.id = `town-${sanitizeId(townName)}`;
     checkbox.name = `town-${sanitizeId(townName)}`;
   });
 
+  // Get form and option elements
   const form = document.querySelector<HTMLFormElement>("#decoration-form")!;
   const valhallaOnlyCheckbox =
     document.querySelector<HTMLInputElement>("#valhalla-only")!;
@@ -241,6 +256,7 @@ export function setupInputForm() {
     "#reset-values-bottom"
   )!;
 
+  // Reset all decoration input values to zero
   function resetAllDecorationInputs() {
     const decorationInputs = document.querySelectorAll<HTMLInputElement>(
       ".decoration-input-group input"
@@ -253,6 +269,7 @@ export function setupInputForm() {
   resetValuesTopButton.addEventListener("click", resetAllDecorationInputs);
   resetValuesBottomButton.addEventListener("click", resetAllDecorationInputs);
 
+  // Add radio buttons for optimization method selection
   const optimizationMethodContainer = document.createElement("div");
   optimizationMethodContainer.id = "optimization-method-container";
   optimizationMethodContainer.innerHTML = `
@@ -265,9 +282,11 @@ export function setupInputForm() {
     form.querySelector("#options-container")
   );
 
+  // Handle form submission and run optimization
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
+    // Gather selected towns and decoration quantities
     const towns = Array.from(townCheckboxes)
       .filter((checkbox) => checkbox.checked)
       .map((checkbox) => checkbox.value);
@@ -283,6 +302,7 @@ export function setupInputForm() {
 
     saveUserData(towns, decorationQuantities);
 
+    // Determine which optimization method to use
     const selectedMethod =
       document.querySelector<HTMLInputElement>(
         "input[name='optimization-method']:checked"
@@ -303,6 +323,7 @@ export function setupInputForm() {
       );
     }
 
+    // Filter Evergarden to only Valhalla decorations if needed
     if (towns.includes("evergarden")) {
       const evergardenDecorations = results["evergarden"].decorations.filter(
         (decoration: { name: string; quantity: number }) => {
@@ -319,6 +340,7 @@ export function setupInputForm() {
 
       results["evergarden"].decorations = evergardenDecorations;
 
+      // Recalculate heart values for Evergarden
       results["evergarden"].green = evergardenDecorations.reduce(
         (sum: number, decoration: { name: string; quantity: number }) => {
           const decorationData = decorations.find(
@@ -348,6 +370,7 @@ export function setupInputForm() {
       );
     }
 
+    // Render results for each town
     const resultsDiv = document.querySelector<HTMLDivElement>("#results")!;
     resultsDiv.innerHTML = "";
 
@@ -365,6 +388,7 @@ export function setupInputForm() {
     towns.forEach((town) => {
       const townResult = results[town];
 
+      // Skip towns with no decorations used
       if (
         !townResult ||
         (townResult.green === 0 &&
@@ -375,6 +399,7 @@ export function setupInputForm() {
         return;
       }
 
+      // Create section for each town's results
       const townSection = document.createElement("div");
       townSection.className = "town-result";
 
@@ -382,6 +407,7 @@ export function setupInputForm() {
       townHeader.textContent = `Results for ${townNames[town] || town}`;
       townSection.appendChild(townHeader);
 
+      // Show heart values for the town
       const heartValues = document.createElement("p");
       heartValues.innerHTML = `
         <strong>Green:</strong> ${townResult.green} <span style="color: green;">&#x1F49A;</span><br>
@@ -390,6 +416,7 @@ export function setupInputForm() {
       `;
       townSection.appendChild(heartValues);
 
+      // List decorations used in the town
       const decorationList = document.createElement("ul");
       const decorationTotals: Record<string, number> = {};
 
@@ -422,6 +449,7 @@ export function setupInputForm() {
       resultsDiv.appendChild(townSection);
     });
 
+    // Show unused decorations
     const unusedDecorations = decorations
       .map(
         (decoration: {
@@ -479,6 +507,7 @@ export function setupInputForm() {
     }
   });
 
+  // Dynamically render all decoration input fields
   const decorationInputs =
     document.querySelector<HTMLDivElement>("#decoration-inputs")!;
   let currentCategory = "";
@@ -510,6 +539,7 @@ export function setupInputForm() {
     decorationInputs.appendChild(inputGroup);
   });
 
+  // Restore user data if available
   const userData = loadUserData();
   if (userData) {
     const { towns, decorationQuantities } = userData;
@@ -528,6 +558,7 @@ export function setupInputForm() {
     });
   }
 
+  // Add import/export section for CSV
   const importExportSection = document.createElement("div");
   importExportSection.innerHTML = `
     <h2>Import/Export Data</h2>
@@ -537,11 +568,13 @@ export function setupInputForm() {
   `;
   app.appendChild(importExportSection);
 
+  // Export CSV button handler
   document.getElementById("export-csv")?.addEventListener("click", () => {
     const { decorationQuantities, results } = gatherExportData();
     exportToCsv(decorationQuantities, results, "HomeQuest-Decor-Export.csv");
   });
 
+  // Import CSV button handler
   document.getElementById("import-csv")?.addEventListener("click", () => {
     const fileInput = document.getElementById(
       "import-file"
