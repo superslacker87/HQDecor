@@ -10,12 +10,43 @@ function sanitizeId(name: string): string {
   return name.replace(/[^a-zA-Z0-9-_]/g, "-");
 }
 
+const iconMap: Record<string, string> = {
+  "Greenery Variant A": "Greenery_var.A.png",
+  "Greenery Variant B": "Greenery_var.B.png",
+  "The Globe": "The_Globe.png",
+  "Heroic Horse": "Heroic_Horse.png",
+  "Tree of Life": "Tree_of_Life.png",
+  "Freya's Fortune": "Freya_27s_Fortune.png",
+  "Golden Freya": "Golden_Freya.png",
+  "Tree of Knowledge": "Tree_of_Knowledge.png",
+  "Park": "Park.png",
+  "Forest": "Forest.png",
+  "Observatory": "Observatory.png",
+  "The Deer": "The_Deer.png",
+  "Elf House": "Elf_House.png",
+  "Snowflake": "Snowflake.png",
+  "Cozy Cabin": "Cozy_Cabin.png",
+  "Rocks": "Rocks.png",
+  "Ridge": "Ridge.png",
+  "Lake": "Lake.png",
+  "Meadow": "Meadow.png",
+  "Theatre": "Theatre.png",
+  "Golden Theatre": "Golden_Theatre.png",
+  "Wizard's Staff": "Wizard_27s_Staff.png",
+  "Gorgon": "Gorgon.png",
+  "Golden Gorgon": "Golden_Gorgon.png",
+  "Temple": "Temple.png",
+  "Golden Temple": "Golden_Temple.png",
+  "Eiffel Tower": "Eiffel_Tower.png"
+};
+
 // Save user selections and decoration quantities to a cookie
 function saveUserData(
   towns: string[],
-  decorationQuantities: Record<string, number>
+  decorationQuantities: Record<string, number>,
+  selectedPacks: string[] = []
 ) {
-  const userData = { towns, decorationQuantities };
+  const userData = { towns, decorationQuantities, selectedPacks };
   document.cookie = `userData=${encodeURIComponent(
     JSON.stringify(userData)
   )}; path=/; max-age=31536000;`;
@@ -174,11 +205,13 @@ function gatherExportData() {
   }
 
   if (Object.keys(results).length === 0) {
+    const maxScore = 1000 + (document.querySelectorAll<HTMLInputElement>(".pack-checkbox:checked").length * 100);
     const optimizationResults = optimizeDecorations(
       Array.from(
         document.querySelectorAll<HTMLInputElement>(".town-checkbox:checked")
       ).map((checkbox) => checkbox.value),
-      decorationQuantities
+      decorationQuantities,
+      maxScore
     );
     Object.entries(optimizationResults).forEach(([town, data]) => {
       results[town] = { decorations: data.decorations || [] };
@@ -224,8 +257,24 @@ export function setupInputForm() {
         </div>
       </section>
 
+      <section class="card-section" id="purchased-packs-container">
+        <h2><span style="color: var(--accent-primary);">2.</span> Purchased Packs</h2>
+        <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Select packs you own to increase your max decoration score (+100 max per pack).</div>
+        <div class="town-checkbox-wrapper" style="margin-bottom: 1rem; background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2);">
+          <input type="checkbox" id="select-all-packs">
+          <label for="select-all-packs">Select All / None</label>
+        </div>
+        <div id="packs-inputs" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          <div class="town-checkbox-wrapper"><input type="checkbox" class="pack-checkbox" value="Trophies of Culture" id="pack-trophies"><label for="pack-trophies">Trophies of Culture</label></div>
+          <div class="town-checkbox-wrapper"><input type="checkbox" class="pack-checkbox" value="Nature Reserve" id="pack-nature"><label for="pack-nature">Nature Reserve</label></div>
+          <div class="town-checkbox-wrapper"><input type="checkbox" class="pack-checkbox" value="Reindeer Fest" id="pack-reindeer"><label for="pack-reindeer">Reindeer Fest</label></div>
+          <div class="town-checkbox-wrapper"><input type="checkbox" class="pack-checkbox" value="Central Park" id="pack-central"><label for="pack-central">Central Park</label></div>
+          <div class="town-checkbox-wrapper"><input type="checkbox" class="pack-checkbox" value="Town Essentials" id="pack-essentials"><label for="pack-essentials">Town Essentials</label></div>
+        </div>
+      </section>
+
       <section class="card-section" id="optimization-method-container">
-        <h2><span style="color: var(--accent-primary);">2.</span> Strategy</h2>
+        <h2><span style="color: var(--accent-primary);">3.</span> Strategy</h2>
         <div style="display: flex; gap: 2rem; margin-top: 1rem;">
           <label class="town-checkbox-wrapper" style="flex: 1;">
             <input type="radio" name="optimization-method" value="maximum" checked>
@@ -246,7 +295,7 @@ export function setupInputForm() {
 
       <section class="card-section" id="decorations-container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h2 style="margin: 0;"><span style="color: var(--accent-primary);">3.</span> Quantities</h2>
+          <h2 style="margin: 0;"><span style="color: var(--accent-primary);">4.</span> Quantities</h2>
           <button type="button" class="btn btn-danger" id="reset-values-top">Reset All</button>
         </div>
         <div id="decoration-inputs">
@@ -283,6 +332,16 @@ export function setupInputForm() {
     });
   });
 
+  // Set up select all/none for packs
+  const selectAllPacksCheckbox = document.querySelector<HTMLInputElement>("#select-all-packs")!;
+  const packCheckboxes = document.querySelectorAll<HTMLInputElement>(".pack-checkbox");
+
+  selectAllPacksCheckbox.addEventListener("change", () => {
+    packCheckboxes.forEach((checkbox) => {
+      checkbox.checked = selectAllPacksCheckbox.checked;
+    });
+  });
+
   // Assign names based on value
   townCheckboxes.forEach((checkbox) => {
     checkbox.name = `town-${sanitizeId(checkbox.value)}`;
@@ -315,15 +374,21 @@ export function setupInputForm() {
       return acc;
     }, {} as Record<string, number>);
 
-    saveUserData(towns, decorationQuantities);
+    const selectedPacks = Array.from(
+      document.querySelectorAll<HTMLInputElement>(".pack-checkbox:checked")
+    ).map((checkbox) => checkbox.value);
+
+    saveUserData(towns, decorationQuantities, selectedPacks);
+
+    const maxScore = 1000 + (selectedPacks.length * 100);
 
     const selectedMethod = document.querySelector<HTMLInputElement>("input[name='optimization-method']:checked")?.value || "maximum";
 
     let results;
     if (selectedMethod === "balanced") {
-      results = optimizeDecorationsBalanced(towns, decorationQuantities);
+      results = optimizeDecorationsBalanced(towns, decorationQuantities, maxScore);
     } else {
-      results = optimizeDecorations(towns, decorationQuantities);
+      results = optimizeDecorations(towns, decorationQuantities, maxScore);
     }
 
     const resultsDiv = document.querySelector<HTMLDivElement>("#results")!;
@@ -347,7 +412,7 @@ export function setupInputForm() {
       townHeader.textContent = `Results for ${townNames[town] || town}`;
       townSection.appendChild(townHeader);
 
-      const baseScore = Math.min(townResult.green, 1500) + Math.min(townResult.blue, 1500) + Math.min(townResult.red, 1500);
+      const baseScore = Math.min(townResult.green, maxScore) + Math.min(townResult.blue, maxScore) + Math.min(townResult.red, maxScore);
       const varietyBonusPercentage = calculateVarietyBonus(townResult.green, townResult.blue, townResult.red);
       const varietyBonusScore = baseScore * varietyBonusPercentage;
       const overallScore = baseScore + varietyBonusScore;
@@ -367,37 +432,82 @@ export function setupInputForm() {
         </div>
       `;
 
-      const decorationList = document.createElement("div");
-      decorationList.className = "decoration-list";
       const decorationTotals: Record<string, number> = {};
 
       townResult.decorations.forEach((decoration: { name: string; quantity: number }) => {
         decorationTotals[decoration.name] = (decorationTotals[decoration.name] || 0) + decoration.quantity;
       });
 
+      const pagesMap = new Map<number, { name: string; total: number }[]>();
+      [1, 2, 3, 4, 5].forEach(p => pagesMap.set(p, []));
+
       Object.entries(decorationTotals)
         .sort(([nameA], [nameB]) => Object.keys(decorationQuantities).indexOf(nameA) - Object.keys(decorationQuantities).indexOf(nameB))
         .forEach(([name, total]) => {
-          const decoration = decorations.find((d) => d.name === name);
-          const item = document.createElement("div");
-          item.className = "decoration-item";
-          item.innerHTML = `
-            <div>
-              <span class="item-name" style="font-weight: 600;">${name}</span>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">
-                <span style="color: var(--accent-green);">G:${(decoration?.green || 0) * total}</span>
-                <span style="color: var(--accent-blue);">B:${(decoration?.blue || 0) * total}</span>
-                <span style="color: var(--accent-red);">R:${(decoration?.red || 0) * total}</span>
-              </div>
-            </div>
-            <div style="background: var(--bg-card); padding: 0.2rem 0.6rem; border-radius: 8px; font-weight: 700;">
-              x<span class="item-qty">${total}</span>
-            </div>
-          `;
-          decorationList.appendChild(item);
+          if (total === 0) return;
+          const category = decorations.find((d) => d.name === name)?.category || "";
+          let pageNum = 1;
+
+          if (["Town Essentials", "Valhalla"].includes(category)) {
+            pageNum = 1;
+          } else if (["Central Park", "Reindeer Fest"].includes(category)) {
+            pageNum = 2;
+          } else if (category === "Nature Reserve") {
+            pageNum = 3;
+          } else if (category === "Trophies of Culture") {
+            if (["Marble Column", "Bronze Statue", "Silver Statue"].includes(name)) {
+              pageNum = 3;
+            } else {
+              pageNum = 4;
+            }
+          } else if (["Oracle", "Mercury", "Medusa"].includes(category)) {
+            pageNum = 4;
+          } else if (["Highgard", "Highard", "Omega"].includes(category)) {
+            pageNum = 5;
+          }
+
+          pagesMap.get(pageNum)!.push({ name, total });
         });
 
-      townSection.appendChild(decorationList);
+      [1, 2, 3, 4, 5].forEach(pageNum => {
+        const items = pagesMap.get(pageNum)!;
+        if (items.length > 0) {
+          const pageHeader = document.createElement("h4");
+          pageHeader.textContent = `Page ${pageNum}`;
+          pageHeader.style.marginTop = "1rem";
+          pageHeader.style.marginBottom = "0.5rem";
+          pageHeader.style.color = "var(--text-muted)";
+          pageHeader.style.fontWeight = "600";
+          townSection.appendChild(pageHeader);
+
+          const decorationList = document.createElement("div");
+          decorationList.className = "decoration-list";
+
+          items.forEach(({ name, total }) => {
+            const decoration = decorations.find((d) => d.name === name);
+            const item = document.createElement("div");
+            item.className = "decoration-item";
+            const imgHtml = iconMap[name] ? `<img src="/icons/${iconMap[name]}" alt="${name}" style="width: 24px; height: 24px; object-fit: contain; vertical-align: middle; margin-right: 8px;">` : '';
+            item.innerHTML = `
+              <div style="display: flex; align-items: center;">
+                ${imgHtml}
+                <div>
+                  <span class="item-name" style="font-weight: 600;">${name}</span>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                  <span style="color: var(--accent-green);">G:${(decoration?.green || 0) * total}</span>
+                  <span style="color: var(--accent-blue);">B:${(decoration?.blue || 0) * total}</span>
+                  <span style="color: var(--accent-red);">R:${(decoration?.red || 0) * total}</span>
+                </div>
+              </div>
+              <div style="background: var(--bg-card); padding: 0.2rem 0.6rem; border-radius: 8px; font-weight: 700;">
+                x<span class="item-qty">${total}</span>
+              </div>
+            `;
+            decorationList.appendChild(item);
+          });
+          townSection.appendChild(decorationList);
+        }
+      });
       resultsDiv.appendChild(townSection);
     });
 
@@ -419,7 +529,13 @@ export function setupInputForm() {
       unusedDecorations.forEach(d => {
         const item = document.createElement("div");
         item.className = "decoration-item";
-        item.innerHTML = `<span class="item-name">${d.name}</span> <span style="font-weight: 700;">x${d.unused}</span>`;
+        const imgHtml = iconMap[d.name] ? `<img src="/icons/${iconMap[d.name]}" alt="${d.name}" style="width: 24px; height: 24px; object-fit: contain; vertical-align: middle; margin-right: 8px;">` : '';
+        item.innerHTML = `
+          <div style="display: flex; align-items: center;">
+            ${imgHtml}
+            <span class="item-name">${d.name}</span>
+          </div>
+          <span style="font-weight: 700;">x${d.unused}</span>`;
         unusedList.appendChild(item);
       });
       unusedSection.appendChild(unusedList);
@@ -447,8 +563,9 @@ export function setupInputForm() {
 
     const inputGroup = document.createElement("div");
     inputGroup.className = "decoration-input-group";
+    const imgHtml = iconMap[name] ? `<img src="/icons/${iconMap[name]}" alt="${name}" style="width: 20px; height: 20px; object-fit: contain; vertical-align: middle; margin-right: 8px;">` : '';
     inputGroup.innerHTML = `
-      <label for="decoration-${sanitizeId(name)}">${name}</label>
+      <label for="decoration-${sanitizeId(name)}" style="display: flex; align-items: center;">${imgHtml}${name}</label>
       <div style="display: flex; gap: 0.5rem; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
         <span style="color: var(--accent-green);">G:${green}</span>
         <span style="color: var(--accent-blue);">B:${blue}</span>
@@ -462,12 +579,14 @@ export function setupInputForm() {
   // Restore data
   const userData = loadUserData();
   if (userData) {
-    const { towns, decorationQuantities } = userData;
+    const { towns, decorationQuantities, selectedPacks = [] } = userData;
     townCheckboxes.forEach(cb => cb.checked = towns.includes(cb.value));
     Object.entries(decorationQuantities).forEach(([name, qty]) => {
       const input = document.querySelector<HTMLInputElement>(`#decoration-${sanitizeId(name)}`);
       if (input) input.value = (qty as number).toString();
     });
+    const packCheckboxes = document.querySelectorAll<HTMLInputElement>(".pack-checkbox");
+    packCheckboxes.forEach(cb => cb.checked = selectedPacks.includes(cb.value));
   }
 
   // Import/Export Handlers

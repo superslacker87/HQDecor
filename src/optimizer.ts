@@ -25,7 +25,8 @@ type TownResult = {
 // Maximum Optimization: Fills up one town at a time, prioritizing Evergarden.
 export function optimizeDecorations(
   towns: string[],
-  decorationQuantities: Record<string, number>
+  decorationQuantities: Record<string, number>,
+  maxScore: number = 1000
 ) {
   const results: Record<string, TownResult> = {};
 
@@ -58,9 +59,9 @@ export function optimizeDecorations(
 
       while (
         decoration.quantity > 0 &&
-        townResult.green + decoration.green <= 1500 &&
-        townResult.blue + decoration.blue <= 1500 &&
-        townResult.red + decoration.red <= 1500
+        townResult.green + decoration.green <= maxScore &&
+        townResult.blue + decoration.blue <= maxScore &&
+        townResult.red + decoration.red <= maxScore
       ) {
         townResult.green += decoration.green;
         townResult.blue += decoration.blue;
@@ -106,7 +107,8 @@ export function optimizeDecorations(
 // Balanced Optimization: A greedy algorithm that maximizes the Total Score at each step.
 export function optimizeDecorationsBalanced(
   towns: string[],
-  decorationQuantities: Record<string, number>
+  decorationQuantities: Record<string, number>,
+  maxScore: number = 1000
 ): Record<string, any> {
   const results: Record<string, any> = {};
   const mutableQuantities = { ...decorationQuantities };
@@ -124,14 +126,14 @@ export function optimizeDecorationsBalanced(
 
     while (true) {
       let bestPlacement: { decoration: Decoration; scoreIncrease: number } | null = null;
-      const currentScore = calculateTotalScore(evergardenResult.green, evergardenResult.blue, evergardenResult.red);
+      const currentScore = calculateTotalScore(evergardenResult.green, evergardenResult.blue, evergardenResult.red, maxScore);
 
       for (const decoration of evergardenAllowedDecorations) {
         if (mutableQuantities[decoration.name] > 0) {
           const newGreen = evergardenResult.green + decoration.green;
           const newBlue = evergardenResult.blue + decoration.blue;
           const newRed = evergardenResult.red + decoration.red;
-          const newScore = calculateTotalScore(newGreen, newBlue, newRed);
+          const newScore = calculateTotalScore(newGreen, newBlue, newRed, maxScore);
           const scoreIncrease = newScore - currentScore;
 
           if (!bestPlacement || scoreIncrease > bestPlacement.scoreIncrease) {
@@ -170,13 +172,13 @@ export function optimizeDecorationsBalanced(
 
       for (const town of otherTowns) {
         const townResult = results[town];
-        const currentScore = calculateTotalScore(townResult.green, townResult.blue, townResult.red);
+        const currentScore = calculateTotalScore(townResult.green, townResult.blue, townResult.red, maxScore);
 
         for (const decoration of availableDecoList) {
           const newGreen = townResult.green + decoration.green;
           const newBlue = townResult.blue + decoration.blue;
           const newRed = townResult.red + decoration.red;
-          const newScore = calculateTotalScore(newGreen, newBlue, newRed);
+          const newScore = calculateTotalScore(newGreen, newBlue, newRed, maxScore);
           const scoreIncrease = newScore - currentScore;
 
           if (!bestPlacement || scoreIncrease > bestPlacement.scoreIncrease) {
